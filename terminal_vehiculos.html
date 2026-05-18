@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terminal Vehículos</title>
+<style>
+:root{--bg:#0f172a;--panel:#1f2937;--txt:#f8fafc;--mut:#cbd5e1;--line:#3b475a;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626;--blue:#2563eb;--r:18px;--shadow:0 14px 35px rgba(0,0,0,.35)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Inter,sans-serif;background:linear-gradient(135deg,#0b1120,#111827 55%,#1e293b);color:var(--txt)}
+.wrap{max-width:740px;margin:auto;padding:16px}header{padding:18px 0}h1{font-size:26px;margin:0}.muted{color:var(--mut)}
+.card{background:rgba(31,41,55,.96);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin:12px 0}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.right{margin-left:auto}
+label{display:block;margin:8px 0 5px;color:var(--mut);font-size:12px;font-weight:900}
+select,input,textarea{width:100%;border:1px solid #475569;background:#0f172a;color:white;border-radius:13px;padding:13px;font-size:16px}
+textarea{min-height:100px;resize:vertical}
+.btn{width:100%;border:0;border-radius:16px;padding:16px 13px;background:#334155;color:white;font-weight:950;font-size:18px;cursor:pointer;margin-top:10px}
+.btn.ok{background:var(--ok)}.btn.warn{background:var(--warn);color:#111827}.btn.bad{background:var(--bad)}.btn.blue{background:var(--blue)}
+.hidden{display:none!important}.pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-weight:900;font-size:12px}.p-disponible{background:#14532d;color:#bbf7d0}.p-en_servicio{background:#78350f;color:#fde68a}.p-reparacion,.p-no_disponible,.p-baja{background:#7f1d1d;color:#fecaca}
+.photo{width:100%;height:180px;object-fit:cover;border-radius:15px;border:1px solid #475569;background:#0f172a}.vehicle{border:1px solid #475569;border-radius:16px;padding:12px;margin:10px 0;background:#111827}.big{font-size:21px;font-weight:950}
+.notice{background:#172554;border:1px solid #2563eb;border-radius:14px;padding:12px;margin:10px 0;color:#dbeafe}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#020617;border:1px solid #64748b;color:white;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Terminal Vehículos</h1>
+  <div class="muted">App móvil de recogida y devolución</div>
+</header>
+
+<div id="loading" class="card">Cargando datos...</div>
+<div id="app" class="hidden"></div>
+<div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const empty=()=>({vehiculos:[],usuarios:[],movimientos:[],incidencias:[],reservas:[],config:{}});
+let DB=empty(), USER=null, fs=null, syncing=false;
+const COLLECTIONS=['vehiculos','usuarios','movimientos','incidencias','reservas'];
+
+try{
+  firebase.initializeApp(firebaseConfig);
+  fs=firebase.firestore();
+  try{fs.settings({experimentalAutoDetectLongPolling:true, merge:true});}catch(e){}
+}catch(e){alert('No se pudo iniciar Firebase. Revisa firebase-config.js')}
+
+function nowISO(){return new Date().toISOString()}
+function todayISODate(){return new Date().toISOString().slice(0,10)}
+function id(p){return p+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function fmt(x){if(!x)return '';let d=new Date(x);return isNaN(d)?'':d.toLocaleString('es-ES')}
+function dateOnlyEs(x){if(!x)return '';let d=new Date(x+'T00:00:00');return isNaN(d)?x:d.toLocaleDateString('es-ES')}
+function toast(t){let el=$('#toast');el.textContent=t;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2400)}
+function vehName(v){return [v.modelo,v.matricula].filter(Boolean).join(' · ')||'Vehículo'}
+function labelEstado(e){return ({disponible:'Disponible',en_servicio:'En servicio',reparacion:'En reparación',no_disponible:'No disponible',baja:'Baja'})[e]||e||'Sin estado'}
+function pillEstado(e){return `<span class="pill p-${esc(e||'no_disponible')}">${labelEstado(e)}</span>`}
+function reservaActiva(r){return r&&r.estado!=='cancelada'&&r.estado!=='completada'}
+function reservasForDate(vehiculoId,fecha){return (DB.reservas||[]).filter(r=>r.vehiculoId===vehiculoId&&reservaActiva(r)&&r.fecha===fecha)}
+function sameReservedPerson(r,u){if(!r||!u)return false;if(r.personaId&&r.personaId===u.id)return true;return String(r.personaNombre||'').trim().toLowerCase()===String(u.nombre||'').trim().toLowerCase()}
+function completarReservaDevolucion(v,u){let arr=(DB.reservas||[]).filter(r=>r.vehiculoId===v.id&&reservaActiva(r)&&r.fecha===todayISODate()&&sameReservedPerson(r,u)).sort((a,b)=>(a.horaRecogida||'').localeCompare(b.horaRecogida||''));if(arr.length){arr[0].estado='completada';arr[0].fechaCompletada=nowISO();return arr[0]}return null}
+function addInc(v,u,txt,origen){DB.incidencias.push({id:id('inc'),vehiculoId:v.id,vehiculoNombre:vehName(v),usuarioId:u?.id||'',usuarioNombre:u?.nombre||'',texto:txt,estado:'abierta',origen,fecha:nowISO(),revisadaPorAdmin:false})}
+
+async function loadFirestore(){
+  if(!fs)return;
+  try{
+    const next=empty();
+    for(const col of COLLECTIONS){
+      const snap=await fs.collection(col).get();
+      next[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    }
+    DB=next;
+    const params=new URLSearchParams(location.search);
+    const uid=params.get('uid')||'';
+    USER=DB.usuarios.find(u=>u.id===uid&&u.tipo==='habitual'&&u.accesoApp!==false);
+    $('#loading').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    render();
+  }catch(e){console.error(e);$('#loading').innerHTML='Error cargando datos de Firestore.'}
+}
+async function syncFirestore(){
+  if(!fs||syncing)return;
+  syncing=true;
+  try{
+    for(const col of COLLECTIONS){
+      const arr=Array.isArray(DB[col])?DB[col]:[];
+      const snap=await fs.collection(col).get();
+      const batch=fs.batch();
+      const ids=new Set(arr.map(x=>x.id).filter(Boolean));
+      snap.docs.forEach(d=>{if(!ids.has(d.id))batch.delete(d.ref)});
+      arr.forEach(item=>{if(!item.id)item.id=id(col.slice(0,3)); batch.set(fs.collection(col).doc(item.id),{...item},{merge:false});});
+      await batch.commit();
+    }
+  }catch(e){console.error(e);alert('Error guardando en Firestore.')}
+  finally{syncing=false}
+}
+function save(){render();syncFirestore();}
+
+function currentVehicle(){
+  if(!USER)return null;
+  return DB.vehiculos.find(v=>v.usuarioActualId===USER.id&&v.estado==='en_servicio')||null;
+}
+function availableVehicles(){
+  if(!USER)return [];
+  return DB.vehiculos.filter(v=>v.activo!==false&&v.estado==='disponible');
+}
+
+function render(){
+  const app=$('#app');
+  if(!USER){
+    app.innerHTML=`<div class="card"><h2>Acceso no válido</h2><p class="muted">Este enlace no corresponde a un usuario habitual activo. Contacta con administración.</p></div>`;
+    return;
+  }
+  const cv=currentVehicle();
+  let html=`<div class="card"><h2>Hola, ${esc(USER.nombre)}</h2><div class="muted">Usuario habitual autorizado</div></div>`;
+  if(cv){
+    html+=`<div class="card"><h2>Vehículo en uso</h2>${cv.fotoData?`<img class="photo" src="${cv.fotoData}">`:''}<div class="big">${esc(vehName(cv))}</div><div>${pillEstado(cv.estado)}</div><div class="muted">Recogido: ${fmt(cv.fechaRecogidaActual)}</div><label>Incidencia o nota de devolución</label><textarea id="dev_nota" placeholder="Ej: golpe, avería, desperfecto..."></textarea><button class="btn ok" onclick="devolver('${cv.id}')">Devolver vehículo</button></div>`;
+  }else{
+    const arr=availableVehicles();
+    html+=`<div class="card"><h2>Recoger vehículo</h2><p class="muted">Solo aparecen vehículos disponibles.</p>${arr.length?arr.map(v=>vehicleCard(v)).join(''):'<p class="muted">No hay vehículos disponibles ahora.</p>'}</div>`;
+  }
+  app.innerHTML=html;
+}
+function vehicleCard(v){
+  const hoy=reservasForDate(v.id,todayISODate());
+  const reservadaParaOtro=hoy.length&&!hoy.some(r=>sameReservedPerson(r,USER));
+  const reservaTxt=hoy.length?`<div class="notice"><b>Reservas hoy:</b><br>${hoy.map(r=>(r.horaRecogida?r.horaRecogida+' · ':'')+esc(r.personaNombre||'')).join('<br>')}</div>`:'';
+  return `<div class="vehicle">${v.fotoData?`<img class="photo" src="${v.fotoData}">`:''}<div class="big">${esc(vehName(v))}</div>${pillEstado(v.estado)}${reservaTxt}<label>Incidencia previa a la asignación, opcional</label><textarea id="nota_${v.id}" placeholder="Ej: faro roto antes de cogerlo"></textarea><button class="btn ${reservadaParaOtro?'bad':'blue'}" ${reservadaParaOtro?'disabled':''} onclick="recoger('${v.id}')">${reservadaParaOtro?'Reservado para otra persona':'Recoger este vehículo'}</button></div>`;
+}
+window.recoger=(vid)=>{
+  const v=DB.vehiculos.find(x=>x.id===vid);
+  if(!v||!USER)return;
+  if(v.estado!=='disponible'){alert('Este vehículo ya no está disponible.');loadFirestore();return}
+  const reservasHoy=reservasForDate(v.id,todayISODate());
+  if(reservasHoy.length&&!reservasHoy.some(r=>sameReservedPerson(r,USER))){
+    alert('Este vehículo está reservado hoy para otra persona.');return;
+  }
+  const nota=($('#nota_'+vid)?.value||'').trim();
+  const antes=v.estado;
+  v.estado='en_servicio';v.usuarioActualId=USER.id;v.usuarioActualNombre=USER.nombre;v.fechaRecogidaActual=nowISO();
+  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'recogida',origen:'terminal_movil',fecha:nowISO(),incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:v.estado});
+  if(nota)addInc(v,USER,nota,'previa_asignacion');
+  save();toast('Vehículo recogido');
+}
+window.devolver=(vid)=>{
+  const v=DB.vehiculos.find(x=>x.id===vid);
+  if(!v||!USER)return;
+  const nota=($('#dev_nota')?.value||'').trim();
+  const antes=v.estado;
+  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'devolucion',origen:'terminal_movil',fecha:nowISO(),incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:'disponible'});
+  completarReservaDevolucion(v,USER);
+  if(nota)addInc(v,USER,nota,'devolucion');
+  v.estado='disponible';v.usuarioActualId='';v.usuarioActualNombre='';v.fechaRecogidaActual='';
+  save();toast('Vehículo devuelto');
+}
+
+loadFirestore();
+</script>
+</body>
+</html>
