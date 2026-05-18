@@ -25,7 +25,7 @@ textarea{min-height:100px;resize:vertical}
 <div class="wrap">
 <header>
   <h1>Terminal Vehículos</h1>
-  <div class="muted">App móvil de recogida y devolución</div>
+  <div class="muted">App móvil de recogida y devolución · tiempo real</div>
 </header>
 
 <div id="loading" class="card">Cargando datos...</div>
@@ -64,25 +64,33 @@ function sameReservedPerson(r,u){if(!r||!u)return false;if(r.personaId&&r.person
 function completarReservaDevolucion(v,u){let arr=(DB.reservas||[]).filter(r=>r.vehiculoId===v.id&&reservaActiva(r)&&r.fecha===todayISODate()&&sameReservedPerson(r,u)).sort((a,b)=>(a.horaRecogida||'').localeCompare(b.horaRecogida||''));if(arr.length){arr[0].estado='completada';arr[0].fechaCompletada=nowISO();return arr[0]}return null}
 function addInc(v,u,txt,origen){DB.incidencias.push({id:id('inc'),vehiculoId:v.id,vehiculoNombre:vehName(v),usuarioId:u?.id||'',usuarioNombre:u?.nombre||'',texto:txt,estado:'abierta',origen,fecha:nowISO(),revisadaPorAdmin:false})}
 
-async function loadFirestore(){
+let loadedCols=new Set(), dbReady=false;
+function startRealtime(){
   if(!fs)return;
   try{
-    const next=empty();
-    for(const col of COLLECTIONS){
-      const snap=await fs.collection(col).get();
-      next[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
-    }
-    DB=next;
-    const params=new URLSearchParams(location.search);
-    const uid=params.get('uid')||'';
-    USER=DB.usuarios.find(u=>u.id===uid&&u.tipo==='habitual'&&u.accesoApp!==false);
-    $('#loading').classList.add('hidden');
-    $('#app').classList.remove('hidden');
-    render();
+    COLLECTIONS.forEach(col=>{
+      fs.collection(col).onSnapshot(snap=>{
+        DB[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
+        loadedCols.add(col);
+        dbReady=loadedCols.size>=COLLECTIONS.length;
+        const params=new URLSearchParams(location.search);
+        const uid=params.get('uid')||'';
+        USER=DB.usuarios.find(u=>u.id===uid&&u.tipo==='habitual'&&u.accesoApp!==false)||null;
+        if(dbReady){
+          $('#loading').classList.add('hidden');
+          $('#app').classList.remove('hidden');
+          render();
+        }
+      },err=>{
+        console.error(err);
+        $('#loading').innerHTML='Error leyendo Firestore en tiempo real.';
+      });
+    });
   }catch(e){console.error(e);$('#loading').innerHTML='Error cargando datos de Firestore.'}
 }
+async function loadFirestore(){startRealtime()}
 async function syncFirestore(){
-  if(!fs||syncing)return;
+  if(!fs||syncing||!dbReady){ if(!dbReady) console.warn('Firestore todavía está cargando; guardado omitido.'); return; }
   syncing=true;
   try{
     for(const col of COLLECTIONS){

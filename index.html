@@ -20,7 +20,7 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #374151;
 </head>
 <body>
 <header>
-  <div><h1>Control de Vehículos</h1><div class="sub">Versión web · Firestore · datos compartidos</div></div>
+  <div><h1>Control de Vehículos</h1><div class="sub">Versión web · Firestore · datos compartidos en tiempo real</div></div>
   <div class="tabs">
     <button class="tab active" data-view="panel">Panel</button>
     <button class="tab" data-view="vehiculos">Vehículos</button>
@@ -48,7 +48,7 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #374151;
 const KEY='LDH_VEHICULOS_FIRESTORE_V1';
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const empty=()=>({vehiculos:[],usuarios:[],movimientos:[],incidencias:[],reservas:[],config:{empresa:'',version:'firestore_v1'}});
-let DB=empty(), view='panel', dbReady=false, syncing=false;
+let DB=empty(), view='panel', dbReady=false, syncing=false, loadedCols=new Set();
 const COLLECTIONS=['vehiculos','usuarios','movimientos','incidencias','reservas'];
 let fs=null;
 try{
@@ -60,27 +60,35 @@ try{
   alert('No se pudo iniciar Firebase. Revisa firebase-config.js');
 }
 function normalizeDB(db){db=db||empty();db.vehiculos=db.vehiculos||[];db.usuarios=db.usuarios||[];db.movimientos=db.movimientos||[];db.incidencias=db.incidencias||[];db.reservas=db.reservas||[];db.config=db.config||{empresa:'',version:'firestore_v1'};return db}
-async function loadFromFirestore(){
+function startRealtime(){
   if(!fs)return;
   try{
-    const configSnap=await fs.collection('configuracion').doc('main').get();
-    const next=empty();
-    if(configSnap.exists)next.config=configSnap.data()||next.config;
-    for(const col of COLLECTIONS){
-      const snap=await fs.collection(col).get();
-      next[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
-    }
-    DB=normalizeDB(next);
-    dbReady=true;
-    render();
-    toast('Datos cargados desde Firestore');
+    fs.collection('configuracion').doc('main').onSnapshot(doc=>{
+      if(doc.exists){DB.config=doc.data()||DB.config}
+      loadedCols.add('configuracion'); dbReady=loadedCols.size>=COLLECTIONS.length+1;
+      render();
+    },err=>console.error(err));
+
+    COLLECTIONS.forEach(col=>{
+      fs.collection(col).onSnapshot(snap=>{
+        DB[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
+        DB=normalizeDB(DB);
+        loadedCols.add(col); dbReady=loadedCols.size>=COLLECTIONS.length+1;
+        render();
+      },err=>{
+        console.error(err);
+        alert('Error leyendo Firestore en tiempo real. Revisa reglas y conexión.');
+      });
+    });
+    toast('Conectado a Firestore en tiempo real');
   }catch(e){
     console.error(e);
-    alert('Error cargando Firestore. Revisa reglas y conexión.');
+    alert('Error iniciando escucha en tiempo real.');
   }
 }
+async function loadFromFirestore(){startRealtime()}
 async function syncFirestore(){
-  if(!fs||!dbReady||syncing)return;
+  if(!fs||!dbReady||syncing){ if(!dbReady) console.warn('Firestore todavía está cargando; guardado omitido.'); return; }
   syncing=true;
   try{
     for(const col of COLLECTIONS){
