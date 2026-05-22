@@ -111,9 +111,29 @@ function currentVehicle(){
   if(!USER)return null;
   return DB.vehiculos.find(v=>v.usuarioActualId===USER.id&&v.estado==='en_servicio')||null;
 }
+function openMovementForVehicle(vid){
+  return (DB.movimientos||[])
+    .filter(m=>m.vehiculoId===vid&&(m.tipo==='recogida'||m.tipo==='devolucion'))
+    .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''))
+    .reduce((open,m)=>{
+      if(m.tipo==='recogida')return m;
+      if(open&&m.tipo==='devolucion')return null;
+      return open;
+    },null);
+}
+function userHasOpenMovement(uid){
+  return (DB.vehiculos||[]).some(v=>v.usuarioActualId===uid&&v.estado==='en_servicio') ||
+    !!(DB.movimientos||[]).filter(m=>m.usuarioId===uid&&(m.tipo==='recogida'||m.tipo==='devolucion'))
+      .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''))
+      .reduce((open,m)=>{
+        if(m.tipo==='recogida')return m;
+        if(open&&m.tipo==='devolucion')return null;
+        return open;
+      },null);
+}
 function availableVehicles(){
   if(!USER)return [];
-  return DB.vehiculos.filter(v=>v.activo!==false&&v.estado==='disponible');
+  return DB.vehiculos.filter(v=>v.activo!==false&&v.estado==='disponible'&&!openMovementForVehicle(v.id));
 }
 
 function render(){
@@ -141,29 +161,54 @@ function vehicleCard(v){
 window.recoger=(vid)=>{
   const v=DB.vehiculos.find(x=>x.id===vid);
   if(!v||!USER)return;
-  if(v.estado!=='disponible'){alert('Este vehículo ya no está disponible.');loadFirestore();return}
+  if(currentVehicle()||userHasOpenMovement(USER.id)){
+    alert('Ya tienes un vehículo recogido. Primero debes devolverlo antes de recoger otro.');
+    render();
+    return;
+  }
+  const abierto=openMovementForVehicle(v.id);
+  if(abierto){
+    alert('Este vehículo tiene una recogida pendiente de devolución. Actualiza la pantalla o avisa a administración.');
+    render();
+    return;
+  }
+  if(v.estado!=='disponible'||v.usuarioActualId){alert('Este vehículo ya no está disponible.');render();return}
   const reservasHoy=reservasForDate(v.id,todayISODate());
   if(reservasHoy.length&&!reservasHoy.some(r=>sameReservedPerson(r,USER))){
     alert('Este vehículo está reservado hoy para otra persona.');return;
   }
   const nota=($('#nota_'+vid)?.value||'').trim();
   const antes=v.estado;
-  v.estado='en_servicio';v.usuarioActualId=USER.id;v.usuarioActualNombre=USER.nombre;v.fechaRecogidaActual=nowISO();
-  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'recogida',origen:'terminal_movil',fecha:nowISO(),incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:v.estado});
+  const fecha=nowISO();
+  v.estado='en_servicio';v.usuarioActualId=USER.id;v.usuarioActualNombre=USER.nombre;v.fechaRecogidaActual=fecha;
+  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'recogida',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:v.estado});
   if(nota)addInc(v,USER,nota,'previa_asignacion');
   save();toast('Vehículo recogido');
 }
 window.devolver=(vid)=>{
   const v=DB.vehiculos.find(x=>x.id===vid);
   if(!v||!USER)return;
+  if(v.estado!=='en_servicio'||v.usuarioActualId!==USER.id){
+    alert('Este vehículo no figura como recogido por tu usuario. Actualiza la pantalla o avisa a administración.');
+    render();
+    return;
+  }
+  const abierto=openMovementForVehicle(v.id);
+  if(abierto&&abierto.usuarioId&&abierto.usuarioId!==USER.id){
+    alert('La recogida abierta de este vehículo pertenece a otro usuario. No se puede devolver desde este terminal.');
+    render();
+    return;
+  }
   const nota=($('#dev_nota')?.value||'').trim();
   const antes=v.estado;
-  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'devolucion',origen:'terminal_movil',fecha:nowISO(),incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:'disponible'});
+  const fecha=nowISO();
+  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'devolucion',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:'disponible'});
   completarReservaDevolucion(v,USER);
   if(nota)addInc(v,USER,nota,'devolucion');
   v.estado='disponible';v.usuarioActualId='';v.usuarioActualNombre='';v.fechaRecogidaActual='';
   save();toast('Vehículo devuelto');
 }
+
 
 loadFirestore();
 </script>
