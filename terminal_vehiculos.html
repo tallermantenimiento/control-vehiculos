@@ -38,8 +38,9 @@ textarea{min-height:100px;resize:vertical}
 <script src="firebase-config.js"></script>
 <script>
 const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
 const empty=()=>({vehiculos:[],usuarios:[],movimientos:[],incidencias:[],reservas:[],config:{}});
-let DB=empty(), USER=null, fs=null, syncing=false;
+let DB=empty(), USER=null, fs=null, syncing=false, actionBusy=false;
 const COLLECTIONS=['vehiculos','usuarios','movimientos','incidencias','reservas'];
 
 try{
@@ -55,6 +56,11 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function fmt(x){if(!x)return '';let d=new Date(x);return isNaN(d)?'':d.toLocaleString('es-ES')}
 function dateOnlyEs(x){if(!x)return '';let d=new Date(x+'T00:00:00');return isNaN(d)?x:d.toLocaleDateString('es-ES')}
 function toast(t){let el=$('#toast');el.textContent=t;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),2400)}
+function setActionBusy(on,msg=''){
+  actionBusy=!!on;
+  $$('button').forEach(b=>b.disabled=!!on);
+  if(msg)toast(msg);
+}
 function vehName(v){return [v.modelo,v.matricula].filter(Boolean).join(' · ')||'Vehículo'}
 function labelEstado(e){return ({disponible:'Disponible',en_servicio:'En servicio',reparacion:'En reparación',no_disponible:'No disponible',baja:'Baja'})[e]||e||'Sin estado'}
 function pillEstado(e){return `<span class="pill p-${esc(e||'no_disponible')}">${labelEstado(e)}</span>`}
@@ -158,7 +164,8 @@ function vehicleCard(v){
   const reservaTxt=hoy.length?`<div class="notice"><b>Reservas hoy:</b><br>${hoy.map(r=>(r.horaRecogida?r.horaRecogida+' · ':'')+esc(r.personaNombre||'')).join('<br>')}</div>`:'';
   return `<div class="vehicle">${v.fotoData?`<img class="photo" src="${v.fotoData}">`:''}<div class="big">${esc(vehName(v))}</div>${pillEstado(v.estado)}${reservaTxt}<label>Incidencia previa a la asignación, opcional</label><textarea id="nota_${v.id}" placeholder="Ej: faro roto antes de cogerlo"></textarea><button class="btn ${reservadaParaOtro?'bad':'blue'}" ${reservadaParaOtro?'disabled':''} onclick="recoger('${v.id}')">${reservadaParaOtro?'Reservado para otra persona':'Recoger este vehículo'}</button></div>`;
 }
-window.recoger=(vid)=>{
+window.recoger=async(vid)=>{
+  if(actionBusy)return;
   const v=DB.vehiculos.find(x=>x.id===vid);
   if(!v||!USER)return;
   if(currentVehicle()||userHasOpenMovement(USER.id)){
@@ -178,14 +185,48 @@ window.recoger=(vid)=>{
     alert('Este vehículo está reservado hoy para otra persona.');return;
   }
   const nota=($('#nota_'+vid)?.value||'').trim();
-  const antes=v.estado;
-  const fecha=nowISO();
-  v.estado='en_servicio';v.usuarioActualId=USER.id;v.usuarioActualNombre=USER.nombre;v.fechaRecogidaActual=fecha;
-  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'recogida',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:v.estado});
-  if(nota)addInc(v,USER,nota,'previa_asignacion');
-  save();toast('Vehículo recogido');
+  const ok=confirm('Vas a recoger el vehículo:\n\n'+vehName(v)+'\n\nUsuario: '+USER.nombre+'\n\n¿Confirmar recogida?');
+  if(!ok)return;
+  setActionBusy(true,'Guardando recogida...');
+  try{
+    const movId=id('mov');
+    const incId=nota?id('inc'):'';
+    const fecha=nowISO();
+    const vehRef=fs.collection('vehiculos').doc(v.id);
+    const movRef=fs.collection('movimientos').doc(movId);
+    const incRef=incId?fs.collection('incidencias').doc(incId):null;
+
+    await fs.runTransaction(async(tx)=>{
+      const snap=await tx.get(vehRef);
+      if(!snap.exists)throw new Error('El vehículo ya no existe en la base.');
+      const actual={id:snap.id,...snap.data()};
+      if(actual.estado!=='disponible'||actual.usuarioActualId){
+        throw new Error('Este vehículo ya no está disponible. Actualiza la pantalla.');
+      }
+      tx.set(movRef,{id:movId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),matricula:actual.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'recogida',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:actual.estado,estadoVehiculoDespues:'en_servicio'});
+      if(incRef){
+        tx.set(incRef,{id:incId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),usuarioId:USER.id,usuarioNombre:USER.nombre,texto:nota,estado:'abierta',origen:'previa_asignacion',fecha,revisadaPorAdmin:false});
+      }
+      tx.update(vehRef,{estado:'en_servicio',usuarioActualId:USER.id,usuarioActualNombre:USER.nombre,fechaRecogidaActual:fecha,updatedAt:fecha});
+    });
+
+    const verify=await vehRef.get();
+    const data=verify.exists?verify.data():{};
+    if(data.estado!=='en_servicio'||data.usuarioActualId!==USER.id){
+      throw new Error('La recogida no quedó confirmada en la base. Revisa conexión y vuelve a intentarlo.');
+    }
+    toast('Vehículo recogido correctamente');
+  }catch(e){
+    console.error(e);
+    alert('No se pudo confirmar la recogida.\n\n'+(e.message||'Revisa conexión y vuelve a intentarlo.'));
+  }finally{
+    setActionBusy(false);
+    render();
+  }
 }
-window.devolver=(vid)=>{
+
+window.devolver=async(vid)=>{
+  if(actionBusy)return;
   const v=DB.vehiculos.find(x=>x.id===vid);
   if(!v||!USER)return;
   if(v.estado!=='en_servicio'||v.usuarioActualId!==USER.id){
@@ -200,13 +241,49 @@ window.devolver=(vid)=>{
     return;
   }
   const nota=($('#dev_nota')?.value||'').trim();
-  const antes=v.estado;
-  const fecha=nowISO();
-  DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'devolucion',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:antes,estadoVehiculoDespues:'disponible'});
-  completarReservaDevolucion(v,USER);
-  if(nota)addInc(v,USER,nota,'devolucion');
-  v.estado='disponible';v.usuarioActualId='';v.usuarioActualNombre='';v.fechaRecogidaActual='';
-  save();toast('Vehículo devuelto');
+  const ok=confirm('Vas a devolver el vehículo:\n\n'+vehName(v)+'\n\nUsuario actual: '+USER.nombre+'\n\n¿Confirmar devolución?');
+  if(!ok)return;
+  setActionBusy(true,'Guardando devolución...');
+  try{
+    const movId=id('mov');
+    const incId=nota?id('inc'):'';
+    const fecha=nowISO();
+    const vehRef=fs.collection('vehiculos').doc(v.id);
+    const movRef=fs.collection('movimientos').doc(movId);
+    const incRef=incId?fs.collection('incidencias').doc(incId):null;
+    const reserva=(DB.reservas||[]).filter(r=>r.vehiculoId===v.id&&reservaActiva(r)&&r.fecha===todayISODate()&&sameReservedPerson(r,USER)).sort((a,b)=>(a.horaRecogida||'').localeCompare(b.horaRecogida||''))[0]||null;
+    const reservaRef=reserva?fs.collection('reservas').doc(reserva.id):null;
+
+    await fs.runTransaction(async(tx)=>{
+      const snap=await tx.get(vehRef);
+      if(!snap.exists)throw new Error('El vehículo ya no existe en la base.');
+      const actual={id:snap.id,...snap.data()};
+      if(actual.estado!=='en_servicio'||actual.usuarioActualId!==USER.id){
+        throw new Error('Este vehículo ya no figura asignado a tu usuario. Actualiza la pantalla.');
+      }
+      tx.set(movRef,{id:movId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),matricula:actual.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'devolucion',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:actual.estado,estadoVehiculoDespues:'disponible'});
+      if(incRef){
+        tx.set(incRef,{id:incId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),usuarioId:USER.id,usuarioNombre:USER.nombre,texto:nota,estado:'abierta',origen:'devolucion',fecha,revisadaPorAdmin:false});
+      }
+      if(reservaRef){
+        tx.update(reservaRef,{estado:'completada',fechaCompletada:fecha,updatedAt:fecha});
+      }
+      tx.update(vehRef,{estado:'disponible',usuarioActualId:'',usuarioActualNombre:'',fechaRecogidaActual:'',updatedAt:fecha});
+    });
+
+    const verify=await vehRef.get();
+    const data=verify.exists?verify.data():{};
+    if(data.estado!=='disponible'||data.usuarioActualId){
+      throw new Error('La devolución no quedó confirmada en la base. Revisa conexión y vuelve a intentarlo.');
+    }
+    toast('Vehículo devuelto correctamente');
+  }catch(e){
+    console.error(e);
+    alert('No se pudo confirmar la devolución.\n\n'+(e.message||'Revisa conexión y vuelve a intentarlo.'));
+  }finally{
+    setActionBusy(false);
+    render();
+  }
 }
 
 
