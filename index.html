@@ -12,6 +12,14 @@ header{position:sticky;top:0;z-index:20;background:rgba(15,23,42,.94);border-bot
 .wrap{max-width:1500px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:rgba(31,41,55,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}.col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-2{grid-column:span 2}
 .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.right{margin-left:auto}.hidden{display:none!important}.muted{color:var(--mut)}.big{font-size:20px;font-weight:950}.kpi{font-size:32px;font-weight:950}h2{margin:0 0 10px;font-size:20px}h3{margin:0 0 8px;font-size:17px}
 label{display:block;margin:8px 0 5px;color:var(--mut);font-size:12px;font-weight:900}input,select,textarea{width:100%;border:1px solid #475569;background:#0f172a;color:#fff;border-radius:12px;padding:10px;outline:none}textarea{min-height:84px;resize:vertical}input[type=file]{padding:8px;background:#111827}
+/* Fix: icono calendario visible en campos de fecha sobre fondo oscuro */
+input[type="date"]{color-scheme:dark;}
+input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:invert(1) brightness(1.8);
+  opacity:.9;
+  cursor:pointer;
+}
+
 table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #374151;padding:10px;text-align:left;vertical-align:top}th{background:#0f172a;font-size:12px;text-transform:uppercase;color:#e5e7eb}tr:hover td{background:rgba(255,255,255,.03)}
 .pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 9px;font-weight:900;font-size:12px;white-space:nowrap}.p-disponible{background:#14532d;color:#bbf7d0}.p-en_servicio{background:#78350f;color:#fde68a}.p-reparacion{background:#7f1d1d;color:#fecaca}.p-no_disponible,.p-baja{background:#334155;color:#e2e8f0}.p-activo{background:#14532d;color:#bbf7d0}.p-inactivo{background:#7f1d1d;color:#fecaca}.p-habitual{background:#1e3a8a;color:#bfdbfe}.p-ocasional{background:#4c1d95;color:#ddd6fe}.p-abierta{background:#7f1d1d;color:#fecaca}.p-cerrada{background:#14532d;color:#bbf7d0}.p-itv_ok{background:#14532d;color:#bbf7d0}.p-itv_proxima{background:#78350f;color:#fde68a}.p-itv_vencida{background:#7f1d1d;color:#fecaca}.p-itv_sin{background:#334155;color:#e2e8f0}
 .vehicle-card{display:grid;grid-template-columns:120px 1fr;gap:14px;min-height:130px}.photo{width:120px;height:112px;object-fit:cover;border-radius:15px;border:1px solid #475569;background:#0f172a}.photo.placeholder{display:flex;align-items:center;justify-content:center;color:#94a3b8;font-weight:900}.tools{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:26px;overflow:auto}.box{width:min(1000px,96vw);background:#111827;border:1px solid #64748b;border-radius:20px;box-shadow:0 22px 70px rgba(0,0,0,.6);padding:18px}.toast{position:fixed;right:18px;bottom:18px;background:#020617;border:1px solid #64748b;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);z-index:100}.danger-zone{border:1px dashed #ef4444;background:rgba(127,29,29,.15)}.notice{background:#172554;border:1px solid #2563eb;border-radius:14px;padding:11px;margin:10px 0;color:#dbeafe}.search{max-width:380px}.details{border:1px solid #475569;border-radius:14px;margin-top:14px;overflow:hidden}.details summary{cursor:pointer;padding:12px 14px;background:#0f172a;font-weight:900}.details .inside{padding:12px}.mini{font-size:12px;color:var(--mut)}
@@ -228,6 +236,31 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #374151;
   line-height:1.1!important;
 }
 
+
+/* FIX DEFINITIVO ICONO CALENDARIO EN CAMPOS DE FECHA DEL HISTORIAL */
+.hist-date-wrap{position:relative;display:block;width:100%;}
+.hist-date-wrap input[type="date"]{padding-right:46px!important;color-scheme:dark!important;}
+.hist-date-wrap input[type="date"]::-webkit-calendar-picker-indicator{
+  opacity:0!important;
+  width:42px!important;
+  height:100%!important;
+  cursor:pointer!important;
+  position:absolute!important;
+  right:0!important;
+}
+.hist-date-wrap::after{
+  content:"📅";
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:19px;
+  line-height:1;
+  color:#e5e7eb;
+  pointer-events:none;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
+}
+
 </style>
 </head>
 <body>
@@ -361,7 +394,7 @@ function renderVehiculos(){let q=($('#veh_search')?.value||'').toLowerCase();let
 function vehicleTable(arr){if(!arr.length)return '<p class="muted">Sin resultados.</p>';return `<table><thead><tr><th>Vehículo</th><th>Estado</th><th>ITV</th><th>Usuario actual</th><th>Desperfectos</th><th>Acciones</th></tr></thead><tbody>${arr.map(v=>`<tr><td><div class="row">${v.fotoData?`<img src="${v.fotoData}" style="width:58px;height:48px;object-fit:cover;border-radius:10px">`:''}<div><b>${esc(vehName(v))}</b><br><span class="muted">${v.activo===false?'Archivado':'Activo'}</span></div></div></td><td>${pillEstado(v.estado)}</td><td>${pillITV(v)}<br><span class="muted">${v.itvFecha?dateOnlyEs(v.itvFecha):'—'}</span></td><td>${esc(v.usuarioActualNombre||userName(v.usuarioActualId)||'—')}<br><span class="muted">${fmt(v.fechaRecogidaActual)||''}</span></td><td>${esc((v.desperfectosConocidos||[]).join(' · ')||'—')}</td><td><div class="tools"><button class="btn small blue" onclick="openVehiculo('${v.id}')">Editar</button><button class="btn small violet" onclick="openAsignar('${v.id}')">Movimiento</button><button class="btn small warn" onclick="openIncidencia('${v.id}')">Incidencia</button></div></td></tr>`).join('')}</tbody></table>`}
 function renderUsuarios(){let arr=DB.usuarios;$('#view-usuarios').innerHTML=`<div class="card col-12"><div class="row"><h2>Usuarios</h2><button class="btn ok right" onclick="openUsuario('', 'habitual')">+ Habitual</button><button class="btn violet" onclick="openUsuario('', 'ocasional')">+ Ocasional</button></div><div class="notice">Los usuarios ocasionales se crean solo en esta base y no pueden entrar en el terminal móvil.</div>${userTable(arr)}</div>`}
 function userTable(arr){if(!arr.length)return '<p class="muted">Sin usuarios.</p>';return `<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>App móvil</th><th>Vehículo actual</th><th>Acciones</th></tr></thead><tbody>${arr.map(u=>{let v=currentUserVehicle(u.id);let appBtns=(u.tipo==='habitual'&&u.accesoApp)?`<button class="btn small ok" onclick="copyAppLink('${u.id}')">Copiar enlace</button><button class="btn small violet" onclick="whatsappAppLink('${u.id}')">WhatsApp</button>`:'';return `<tr><td><b>${esc(u.nombre)}</b><br><span class="muted">${esc(u.telefono||'')}</span></td><td>${pill(u.tipo||'habitual',u.tipo==='ocasional'?'ocasional':'habitual')}</td><td>${u.activo!==false?pill('Activo','activo'):pill('Desactivado','inactivo')}</td><td>${u.accesoApp&&u.tipo==='habitual'?'Sí':'No'}</td><td>${v?esc(vehName(v)):'—'}</td><td><div class="tools"><button class="btn small blue" onclick="openUsuario('${u.id}')">Editar</button>${appBtns}<button class="btn small bad" onclick="toggleUsuario('${u.id}')">Borrar</button></div></td></tr>`}).join('')}</tbody></table>`}
-function renderHistorial(){let rows=allServiceRows().sort((a,b)=>(b.fechaRecogida||b.fechaDevolucion||'').localeCompare(a.fechaRecogida||a.fechaDevolucion||''));$('#view-historial').innerHTML=`<div class="card col-12"><div class="row"><h2>Historial por vehículo</h2><button class="btn blue right" onclick="exportCSV()">Exportar CSV</button></div><div class="notice">El historial general sale agrupado por vehículo. Dentro de cada vehículo, cada línea corresponde a un servicio completo: recogida, devolución e incidencias en la misma fila.</div>${groupedServiceHistory(rows)}</div>`}
+function renderHistorial(){let rows=allServiceRows().sort((a,b)=>(b.fechaRecogida||b.fechaDevolucion||'').localeCompare(a.fechaRecogida||a.fechaDevolucion||''));$('#view-historial').innerHTML=`<div class="card col-12"><div class="row"><h2>Historial de servicios de vehículos</h2><button class="btn ok right" onclick="printHistorialServicios()">Imprimir historial</button><button class="btn blue" onclick="exportCSV()">Exportar CSV</button></div><div class="notice">Informe imprimible integrado: genera una vista limpia A4 con una sola tabla de historial, ordenada por fecha y con las devoluciones pendientes marcadas.</div><div class="grid" style="margin-bottom:12px"><div class="col-3"><label>Periodo desde</label><span class="hist-date-wrap"><input id="hist_print_desde" type="date"></span></div><div class="col-3"><label>Periodo hasta</label><span class="hist-date-wrap"><input id="hist_print_hasta" type="date"></span></div><div class="col-6"><label>&nbsp;</label><div class="tools"><button class="btn ok" onclick="printHistorialServicios()">Imprimir / Guardar PDF</button><button class="btn ghost" onclick="$('#hist_print_desde').value='';$('#hist_print_hasta').value=''">Limpiar fechas</button></div></div></div>${groupedServiceHistory(rows)}</div>`}
 function allServiceRows(vehicleId=''){
   let movs=[...DB.movimientos].filter(m=>!vehicleId||m.vehiculoId===vehicleId).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
   let rows=[], open={};
@@ -569,6 +602,108 @@ window.openIncidencia=(vid='')=>{modal(`<div class="row"><h2>Nueva incidencia</h
 window.saveIncidencia=()=>{let v=DB.vehiculos.find(x=>x.id===$('#i_veh').value),u=DB.usuarios.find(x=>x.id===$('#i_user').value),txt=$('#i_txt').value.trim();if(!v||!txt){toast('Falta vehículo o texto');return}addInc(v,u,txt,'base_pc');save();closeModal();toast('Incidencia guardada')};
 window.cerrarIncidencia=(iid)=>{let i=DB.incidencias.find(x=>x.id===iid);if(!i)return;i.estado='cerrada';i.fechaCierre=nowISO();i.revisadaPorAdmin=true;save();toast('Incidencia cerrada')};
 window.borrarIncidencia=(iid)=>{let i=DB.incidencias.find(x=>x.id===iid);if(!i)return;if(!confirm('¿Borrar esta incidencia? Esta acción elimina la incidencia de la lista para no acumular registros antiguos.'))return;DB.incidencias=DB.incidencias.filter(x=>x.id!==iid);save();toast('Incidencia borrada')};
+
+function pad2(n){return String(n).padStart(2,'0')}
+function printDateOnly(x){
+  if(!x)return '—';
+  let d=new Date(x);
+  if(isNaN(d))return '—';
+  return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear();
+}
+function printTimeOnly(x){
+  if(!x)return '—';
+  let d=new Date(x);
+  if(isNaN(d))return '—';
+  return pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+function printDuration(a,b){
+  if(!a||!b)return b?'—':'En curso';
+  let da=new Date(a), db=new Date(b);
+  if(isNaN(da)||isNaN(db)||db<da)return '—';
+  let mins=Math.round((db-da)/60000), h=Math.floor(mins/60), m=mins%60;
+  return (h?h+'h ':'')+m+'m';
+}
+function printObs(r){
+  let partes=[];
+  if((r.comentarios||[]).length)partes.push((r.comentarios||[]).join(' | '));
+  if((r.incidencias||[]).length)partes.push('Incidencia: '+(r.incidencias||[]).join(' | '));
+  return partes.join(' — ')||'—';
+}
+function historialServiciosFiltrado(){
+  let desde=$('#hist_print_desde')?.value||'', hasta=$('#hist_print_hasta')?.value||'';
+  let rows=allServiceRows().filter(r=>{
+    let ref=(r.fechaRecogida||r.fechaDevolucion||'').slice(0,10);
+    if(desde&&ref<desde)return false;
+    if(hasta&&ref>hasta)return false;
+    return true;
+  }).sort((a,b)=>(b.fechaRecogida||b.fechaDevolucion||'').localeCompare(a.fechaRecogida||a.fechaDevolucion||''));
+  return {rows,desde,hasta};
+}
+window.printHistorialServicios=()=>{
+  let {rows,desde,hasta}=historialServiciosFiltrado();
+  let fechaInforme=new Date();
+  let periodo=(desde?dateOnlyEs(desde):'Inicio')+' - '+(hasta?dateOnlyEs(hasta):'Hoy');
+  let bodyRows=rows.map(r=>{
+    let pendiente=!r.fechaDevolucion;
+    let veh=esc(r.vehiculoNombre||'');
+    let mat=esc(r.matricula||'');
+    let user=esc(r.usuarioNombre||'');
+    return `<tr class="${pendiente?'pending':''}">
+      <td>${printDateOnly(r.fechaRecogida)}</td>
+      <td>${printTimeOnly(r.fechaRecogida)}</td>
+      <td>${veh||'—'}</td>
+      <td>${mat||'—'}</td>
+      <td>${user||'—'}</td>
+      <td>${pendiente?'<b>Pendiente</b>':printDateOnly(r.fechaDevolucion)}</td>
+      <td>${pendiente?'—':printTimeOnly(r.fechaDevolucion)}</td>
+      <td>${pendiente?'<b>En curso</b>':printDuration(r.fechaRecogida,r.fechaDevolucion)}</td>
+      <td>${esc(printObs(r))}</td>
+    </tr>`;
+  }).join('');
+  let html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Historial de servicios de vehículos</title>
+  <style>
+    @page{size:A4 portrait;margin:10mm}
+    *{box-sizing:border-box}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#111827;background:#fff}
+    .toolbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #cbd5e1;padding:10px 0;margin-bottom:12px;display:flex;gap:8px;justify-content:flex-end}
+    .btn{border:0;border-radius:10px;padding:9px 13px;background:#0f2744;color:#fff;font-weight:800;cursor:pointer}
+    .btn.secondary{background:#64748b}
+    .page{width:190mm;max-width:190mm;margin:0 auto}
+    h1{margin:0;text-align:center;font-size:22px;letter-spacing:.025em;text-transform:uppercase;color:#0f2744;white-space:normal}
+    .line{height:3px;background:#0f2744;margin:10px 0 14px}
+    .meta{border:1px solid #94a3b8;padding:10px 12px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;align-items:start;font-size:12px}
+    .meta b{display:inline-block;min-width:120px}
+    table{width:100%;border-collapse:collapse;font-size:8.4px;table-layout:fixed}
+    th{background:#0f2744;color:#fff;padding:6px 3px;border:1px solid #8aa0b8;text-align:center;line-height:1.15}
+    td{padding:5px 3px;border:1px solid #cbd5e1;text-align:center;vertical-align:middle;line-height:1.2;word-break:break-word;overflow-wrap:anywhere}
+    td:nth-child(3),td:nth-child(5),td:nth-child(9){text-align:left}
+    tbody tr:nth-child(even){background:#f8fafc}
+    tr.pending{background:#fff1d6!important}
+    tr.pending td:nth-child(6),tr.pending td:nth-child(8){color:#c2410c;font-weight:900}
+    .empty{border:1px solid #cbd5e1;padding:22px;text-align:center;color:#475569}
+    .footer{display:flex;justify-content:space-between;gap:12px;margin-top:18px;border-top:2px solid #0f2744;padding-top:9px;font-size:12px}
+    @media print{
+      .toolbar{display:none}
+      body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      h1{font-size:21px}
+      table{font-size:8px}
+      th,td{padding:4px 2px}
+    }
+  </style></head><body><div class="toolbar"><button class="btn" onclick="window.print()">Imprimir / Guardar PDF</button><button class="btn secondary" onclick="window.close()">Cerrar</button></div><div class="page">
+    <h1>Historial de servicios de vehículos</h1><div class="line"></div>
+    <div class="meta">
+      <div><p><b>Fecha del informe:</b> ${printDateOnly(fechaInforme.toISOString())} ${printTimeOnly(fechaInforme.toISOString())}</p><p><b>Periodo:</b> ${esc(periodo)}</p></div>
+      <div><p><b>Total servicios listados:</b> ${rows.length}</p><p><b>Orden:</b> Más reciente primero</p></div>
+      <div><p><b>Contenido:</b> Recogidas, devoluciones, duración y observaciones</p></div>
+    </div>
+    ${rows.length?`<table><colgroup><col style="width:10%"><col style="width:6%"><col style="width:15%"><col style="width:10%"><col style="width:12%"><col style="width:10%"><col style="width:7%"><col style="width:8%"><col style="width:22%"></colgroup><thead><tr><th>Fecha recogida</th><th>Hora</th><th>Vehículo</th><th>Matrícula</th><th>Operario</th><th>Fecha devolución</th><th>Hora dev.</th><th>Duración</th><th>Observaciones</th></tr></thead><tbody>${bodyRows}</tbody></table>`:'<div class="empty">No hay servicios en el periodo seleccionado.</div>'}
+    <div class="footer"><div>Informe generado automáticamente por el sistema</div><div>Página 1</div></div>
+  </div></body></html>`;
+  let w=window.open('','_blank');
+  if(!w){alert('El navegador ha bloqueado la ventana de impresión. Permite ventanas emergentes para este sitio.');return}
+  w.document.open();w.document.write(html);w.document.close();w.focus();
+};
+
 window.exportCSV=()=>{let servicios=allServiceRows().sort((a,b)=>(a.fechaRecogida||a.fechaDevolucion||'').localeCompare(b.fechaRecogida||b.fechaDevolucion||''));let rows=[['recogida','devolucion','vehiculo','usuario','comentarios','incidencias'],...servicios.map(r=>[fmt(r.fechaRecogida),fmt(r.fechaDevolucion),r.vehiculoNombre,r.usuarioNombre,(r.comentarios||[]).join(' | '),(r.incidencias||[]).join(' | ')])];downloadText('historial_servicios_vehiculos.csv',rows.map(r=>r.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\n'),'text/csv')};
 function downloadText(name,text,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 window.downloadBackup=()=>downloadText('copia_control_vehiculos_firestore.json',JSON.stringify(DB,null,2),'application/json');
