@@ -18,19 +18,46 @@ textarea{min-height:100px;resize:vertical}
 .hidden{display:none!important}.pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-weight:900;font-size:12px}.p-disponible{background:#14532d;color:#bbf7d0}.p-en_servicio{background:#78350f;color:#fde68a}.p-reparacion,.p-no_disponible,.p-baja{background:#7f1d1d;color:#fecaca}
 .photo{width:100%;height:180px;object-fit:cover;border-radius:15px;border:1px solid #475569;background:#0f172a}.vehicle{border:1px solid #475569;border-radius:16px;padding:12px;margin:10px 0;background:#111827}.big{font-size:21px;font-weight:950}
 .notice{background:#172554;border:1px solid #2563eb;border-radius:14px;padding:12px;margin:10px 0;color:#dbeafe}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#020617;border:1px solid #64748b;color:white;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.secondary{background:#475569}.btn.protocol-ready{background:#15803d}.btn.return-ready{background:#b91c1c}
+.protocol-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:90;display:flex;align-items:center;justify-content:center;padding:18px}
+.protocol-box{width:min(430px,100%);background:#fff;color:#111827;border-radius:22px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.protocol-icon{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:30px;font-weight:900;color:#fff}.protocol-icon.pick{background:#f97316}.protocol-icon.return{background:#dc2626}
+.protocol-title{text-align:center;font-size:22px;font-weight:950;margin:0 0 12px}.protocol-title.pick{color:#ea580c}.protocol-title.return{color:#dc2626}
+.protocol-text{font-size:15px;line-height:1.35;margin:0 0 10px}.protocol-warning{display:flex;gap:10px;align-items:flex-start;border:1px solid #fdba74;background:#fff7ed;border-radius:14px;padding:11px;margin:12px 0;font-size:14px;line-height:1.3}.protocol-warning .warn-ico{font-size:24px;line-height:1}
+.protocol-check{display:flex;gap:11px;align-items:flex-start;margin:15px 0}.protocol-check input{width:22px;height:22px;margin-top:2px;accent-color:#f97316;flex:0 0 auto}.protocol-check label{margin:0;color:#111827;font-size:15px;font-weight:800;line-height:1.35}
+.protocol-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin-top:14px}.protocol-actions .btn{margin:0;font-size:16px;border-radius:12px;padding:13px 10px}.protocol-help{text-align:center;color:#6b7280;font-size:13px;margin-top:10px}
+
+.field-alert{display:flex;gap:11px;align-items:flex-start;background:linear-gradient(135deg,#0b3b76,#172554);border:2px solid #60a5fa;border-radius:16px;padding:13px;margin:12px 0 8px;color:#eff6ff;box-shadow:0 8px 22px rgba(37,99,235,.24)}
+.field-alert.pick{background:linear-gradient(135deg,#7c2d12,#431407);border-color:#fb923c;color:#fff7ed;box-shadow:0 8px 22px rgba(249,115,22,.24)}
+.field-alert.return{background:linear-gradient(135deg,#7f1d1d,#450a0a);border-color:#f87171;color:#fff1f2;box-shadow:0 8px 22px rgba(220,38,38,.24)}
+.field-alert .ico{font-size:24px;line-height:1;margin-top:1px;flex:0 0 auto}
+.field-alert b{display:block;font-size:15px;margin-bottom:3px}
+.field-alert span{display:block;font-size:14px;line-height:1.35}
+.field-alert + label{margin-top:10px;color:#fff;font-size:13px}
+
+.open-incidents{background:rgba(127,29,29,.26);border:1px solid #f87171;border-radius:16px;padding:12px;margin:12px 0;color:#fee2e2}
+.open-incidents.ok{background:rgba(20,83,45,.24);border-color:#22c55e;color:#dcfce7}
+.open-incidents-title{font-weight:950;margin-bottom:7px;display:flex;gap:7px;align-items:center}
+.open-incidents ul{margin:7px 0 8px 20px;padding:0}
+.open-incidents li{margin:5px 0;line-height:1.28}
+.open-incidents small{display:block;color:#fecaca;line-height:1.35}
+.open-incidents.ok small{color:#bbf7d0}
+
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#020617;border:1px solid #64748b;color:white;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);z-index:100}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>Terminal Vehículos</h1>
-  <div class="muted">App móvil de recogida y devolución · tiempo real</div>
+  <div class="muted">App móvil de recogida y devolución · PROTOCOLO TEST · INCIDENCIAS ABIERTAS</div>
 </header>
 
 <div id="loading" class="card">Cargando datos...</div>
 <div id="app" class="hidden"></div>
 <div id="toast" class="toast hidden"></div>
+<div id="protocolModal" class="protocol-backdrop hidden"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -41,6 +68,8 @@ const $=s=>document.querySelector(s);
 const $$=s=>Array.from(document.querySelectorAll(s));
 const empty=()=>({vehiculos:[],usuarios:[],movimientos:[],incidencias:[],reservas:[],config:{}});
 let DB=empty(), USER=null, fs=null, syncing=false, actionBusy=false;
+let protocolAccepted={recogida:{},devolucion:{}};
+let selectedPickupVid='';
 const COLLECTIONS=['vehiculos','usuarios','movimientos','incidencias','reservas'];
 
 try{
@@ -61,6 +90,56 @@ function setActionBusy(on,msg=''){
   $$('button').forEach(b=>b.disabled=!!on);
   if(msg)toast(msg);
 }
+
+function closeProtocol(){
+  const el=$('#protocolModal');
+  if(el){el.classList.add('hidden');el.innerHTML='';}
+}
+function showProtocol(tipo,vid){
+  const v=DB.vehiculos.find(x=>x.id===vid);
+  if(!v)return;
+  const isPickup=tipo==='recogida';
+  const modal=$('#protocolModal');
+  const icon=isPickup?'🚐':'⚠️';
+  const title=isPickup?'Antes de recoger el vehículo':'Antes de devolver el vehículo';
+  const titleClass=isPickup?'pick':'return';
+  const acceptText=isPickup?'He revisado el vehículo y acepto esta responsabilidad':'He revisado el vehículo y entiendo que debo indicar cualquier incidencia antes de devolverlo';
+  const mainText=isPickup?
+    '<p class="protocol-text">Revise visualmente el estado del vehículo antes de iniciar su uso.</p><p class="protocol-text">Si observa cualquier golpe, desperfecto, avería, rotura o anomalía, debe indicarlo en la casilla correspondiente antes de confirmar la recogida.</p>':
+    '<p class="protocol-text">Antes de finalizar el uso del vehículo, revise su estado e indique cualquier percance, daño, avería o incidencia ocurrida durante su turno.</p><p class="protocol-text">Si durante su uso el vehículo ha sufrido algún daño o anomalía, debe anotarlo en la casilla correspondiente antes de confirmar la devolución.</p>';
+  const warning=isPickup?
+    '<div class="protocol-warning"><div class="warn-ico">⚠️</div><div><b>Importante:</b> si el siguiente operario comunica un daño no registrado previamente, la responsabilidad podrá recaer sobre el último usuario que utilizó el vehículo.</div></div>':
+    '<div class="protocol-warning"><div class="warn-ico">ℹ️</div><div>Si necesita escribir una incidencia y aún no la ha indicado, pulse <b>Cancelar</b> y anótela en la casilla antes de continuar.</div></div>';
+  modal.innerHTML=`<div class="protocol-box" role="dialog" aria-modal="true">
+    <div class="protocol-icon ${titleClass}">${icon}</div>
+    <h2 class="protocol-title ${titleClass}">${title}</h2>
+    <div class="protocol-text"><b>${esc(vehName(v))}</b></div>
+    ${mainText}
+    ${warning}
+    <div class="protocol-check">
+      <input id="protocol_ok" type="checkbox">
+      <label for="protocol_ok">${acceptText}</label>
+    </div>
+    <div class="protocol-actions">
+      <button id="protocol_cancel" class="btn secondary" type="button">Cancelar</button>
+      <button id="protocol_accept" class="btn ${isPickup?'warn':'bad'}" type="button" disabled>Acepto y continúo</button>
+    </div>
+    <div class="protocol-help">Debe aceptar para continuar. Después podrá confirmar la acción en el formulario.</div>
+  </div>`;
+  modal.classList.remove('hidden');
+  const chk=$('#protocol_ok');
+  const accept=$('#protocol_accept');
+  chk.addEventListener('change',()=>{accept.disabled=!chk.checked});
+  $('#protocol_cancel').addEventListener('click',closeProtocol);
+  accept.addEventListener('click',()=>{
+    protocolAccepted[isPickup?'recogida':'devolucion'][vid]=true;
+    if(isPickup) selectedPickupVid=vid;
+    closeProtocol();
+    render();
+    toast(isPickup?'Protocolo aceptado. Revise la casilla de desperfectos y confirme la recogida.':'Protocolo aceptado. Revise la casilla de incidencia y confirme la devolución.');
+  });
+}
+
 function vehName(v){return [v.modelo,v.matricula].filter(Boolean).join(' · ')||'Vehículo'}
 function labelEstado(e){return ({disponible:'Disponible',en_servicio:'En servicio',reparacion:'En reparación',no_disponible:'No disponible',baja:'Baja'})[e]||e||'Sin estado'}
 function pillEstado(e){return `<span class="pill p-${esc(e||'no_disponible')}">${labelEstado(e)}</span>`}
@@ -68,7 +147,41 @@ function reservaActiva(r){return r&&r.estado!=='cancelada'&&r.estado!=='completa
 function reservasForDate(vehiculoId,fecha){return (DB.reservas||[]).filter(r=>r.vehiculoId===vehiculoId&&reservaActiva(r)&&r.fecha===fecha)}
 function sameReservedPerson(r,u){if(!r||!u)return false;if(r.personaId&&r.personaId===u.id)return true;return String(r.personaNombre||'').trim().toLowerCase()===String(u.nombre||'').trim().toLowerCase()}
 function completarReservaDevolucion(v,u){let arr=(DB.reservas||[]).filter(r=>r.vehiculoId===v.id&&reservaActiva(r)&&r.fecha===todayISODate()&&sameReservedPerson(r,u)).sort((a,b)=>(a.horaRecogida||'').localeCompare(b.horaRecogida||''));if(arr.length){arr[0].estado='completada';arr[0].fechaCompletada=nowISO();return arr[0]}return null}
-function addInc(v,u,txt,origen){DB.incidencias.push({id:id('inc'),vehiculoId:v.id,vehiculoNombre:vehName(v),usuarioId:u?.id||'',usuarioNombre:u?.nombre||'',texto:txt,estado:'abierta',origen,fecha:nowISO(),revisadaPorAdmin:false})}
+function addInc(v,u,txt,origen){DB.incidencias.push({id:id('inc'),vehiculoId:v.id,vehiculoNombre:vehName(v),usuarioId:u?.id||'',usuarioNombre:u?.nombre||'',texto:txt,estado:'abierta',origen,fecha:nowISO(),revisadaPorAdmin:false,...responsabilidadIncidencia(v,u,origen,nowISO())})}
+const RESPONSABILIDAD_IMPL_DESDE='2026-08-10T10:34:00.000Z';
+function ultimoUsuarioAnteriorVehiculo(vehiculoId,fechaRef){
+  const limite=fechaRef||nowISO();
+  return [...(DB.movimientos||[])]
+    .filter(m=>m.vehiculoId===vehiculoId && (m.tipo==='recogida'||m.tipo==='devolucion') && m.usuarioId && (!m.fecha || m.fecha < limite))
+    .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))[0]||null;
+}
+function responsabilidadIncidencia(v,u,origen,fechaRef){
+  if(origen==='devolucion'){
+    return {responsabilidadImplDesde:RESPONSABILIDAD_IMPL_DESDE,responsabilidadTipo:'usuario_devolucion',responsableInternoId:u?.id||'',responsableInternoNombre:u?.nombre||'',responsabilidadCriterio:'Incidencia comunicada al devolver: responsable interno sugerido = usuario que devuelve.'};
+  }
+  if(origen==='previa_asignacion'||origen==='recogida'){
+    const prev=ultimoUsuarioAnteriorVehiculo(v?.id||'',fechaRef);
+    return {responsabilidadImplDesde:RESPONSABILIDAD_IMPL_DESDE,responsabilidadTipo:prev?'ultimo_usuario_anterior':'sin_usuario_anterior',responsableInternoId:prev?.usuarioId||'',responsableInternoNombre:prev?.usuarioNombre||'',responsabilidadCriterio:prev?'Incidencia previa a la asignación: responsable interno sugerido = último usuario anterior registrado del vehículo.':'Incidencia previa a la asignación: no se encontró usuario anterior registrado.'};
+  }
+  return {responsabilidadImplDesde:RESPONSABILIDAD_IMPL_DESDE,responsabilidadTipo:'manual_sin_asignar',responsableInternoId:'',responsableInternoNombre:'',responsabilidadCriterio:'Incidencia manual o administrativa: sin responsable interno sugerido automático.'};
+}
+
+function incidenciasAbiertasVehiculo(vehiculoId){
+  return (DB.incidencias||[])
+    .filter(i=>i.vehiculoId===vehiculoId && i.estado!=='cerrada')
+    .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+}
+function openIncidentsBox(vehiculoId,contexto='recogida'){
+  const arr=incidenciasAbiertasVehiculo(vehiculoId);
+  if(!arr.length){
+    return `<div class="open-incidents ok"><div class="open-incidents-title">✅ Incidencias abiertas ya comunicadas</div><div>No hay incidencias abiertas registradas para este vehículo.</div><small>Si observa algo nuevo, escríbalo en la casilla inferior antes de confirmar.</small></div>`;
+  }
+  const items=arr.map(i=>`<li>${esc(i.texto||'Incidencia sin texto')}<br><span class="muted">${esc(fmt(i.fecha)||'')} ${i.usuarioNombre?'· '+esc(i.usuarioNombre):''}</span></li>`).join('');
+  const extra=contexto==='recogida'
+    ? 'Si el desperfecto ya aparece en esta lista y no ha cambiado, no es necesario volver a comunicarlo. Escriba solo daños nuevos o si una incidencia existente ha empeorado.'
+    : 'Revise esta lista como referencia. En la casilla inferior escriba solo incidencias nuevas ocurridas durante su uso o cambios importantes.';
+  return `<div class="open-incidents"><div class="open-incidents-title">⚠️ Incidencias abiertas ya comunicadas</div><ul>${items}</ul><small>${extra}</small></div>`;
+}
 
 let loadedCols=new Set(), dbReady=false;
 function startRealtime(){
@@ -142,27 +255,44 @@ function availableVehicles(){
   return DB.vehiculos.filter(v=>v.activo!==false&&v.estado==='disponible'&&!openMovementForVehicle(v.id));
 }
 
+window.cancelPickupSelection=()=>{
+  selectedPickupVid='';
+  protocolAccepted.recogida={};
+  render();
+  toast('Selección cancelada. Elige el vehículo de nuevo.');
+}
+
 function render(){
   const app=$('#app');
   if(!USER){
-    app.innerHTML=`<div class="card"><h2>Acceso no válido</h2><p class="muted">Este enlace no corresponde a un usuario habitual activo. Contacta con administración.</p></div>`;
+    app.innerHTML=`<div class="card"><h2>Acceso no válido</h2><p class="muted">Este enlace no corresponde a un usuario habitual autorizado.</p><p class="muted">Abra la app desde el enlace personal generado en el programa de control.</p></div>`;
     return;
   }
   const cv=currentVehicle();
   let html=`<div class="card"><h2>Hola, ${esc(USER.nombre)}</h2><div class="muted">Usuario habitual autorizado</div></div>`;
   if(cv){
-    html+=`<div class="card"><h2>Vehículo en uso</h2>${cv.fotoData?`<img class="photo" src="${cv.fotoData}">`:''}<div class="big">${esc(vehName(cv))}</div><div>${pillEstado(cv.estado)}</div><div class="muted">Recogido: ${fmt(cv.fechaRecogidaActual)}</div><label>Incidencia o nota de devolución</label><textarea id="dev_nota" placeholder="Ej: golpe, avería, desperfecto..."></textarea><button class="btn ok" onclick="devolver('${cv.id}')">Devolver vehículo</button></div>`;
+    const devReady=!!protocolAccepted.devolucion[cv.id];
+    html+=`<div class="card"><h2>Vehículo en uso</h2>${cv.fotoData?`<img class="photo" src="${cv.fotoData}">`:''}<div class="big">${esc(vehName(cv))}</div><div>${pillEstado(cv.estado)}</div><div class="muted">Recogido: ${fmt(cv.fechaRecogidaActual)}</div>${devReady?'<div class="field-alert return"><div class="ico">⚠️</div><div><b>Revise antes de confirmar</b><span>Si ha ocurrido cualquier golpe, avería, desperfecto o incidencia durante el uso, escríbalo en la casilla inferior antes de pulsar Confirmar devolución. Si no ha ocurrido nada, puede dejarla vacía.</span></div></div>':'<div class="notice">Antes de devolver, se mostrará el protocolo de devolución para su aceptación.</div>'}${devReady?openIncidentsBox(cv.id,'devolucion'):''}<label>Escriba aquí la incidencia de devolución, si existe</label><textarea id="dev_nota" placeholder="Ej: golpe, avería, desperfecto... Si no ha ocurrido ninguna incidencia, puede dejarlo vacío."></textarea><button class="btn ${devReady?'return-ready':'bad'}" onclick="devolver('${cv.id}')">${devReady?'Confirmar devolución':'Devolver vehículo'}</button></div>`;
   }else{
     const arr=availableVehicles();
-    html+=`<div class="card"><h2>Recoger vehículo</h2><p class="muted">Solo aparecen vehículos disponibles.</p>${arr.length?arr.map(v=>vehicleCard(v)).join(''):'<p class="muted">No hay vehículos disponibles ahora.</p>'}</div>`;
+    const selected=selectedPickupVid?arr.find(v=>v.id===selectedPickupVid):null;
+    if(selected){
+      html+=`<div class="card"><h2>Confirmar vehículo seleccionado</h2><p class="muted">Solo se muestra el vehículo que has elegido. Escribe una incidencia si existe y confirma la recogida.</p>${vehicleCard(selected,true)}</div>`;
+    }else{
+      html+=`<div class="card"><h2>Recoger vehículo</h2><p class="muted">Solo aparecen vehículos disponibles. Elige un vehículo para aceptar el protocolo y continuar.</p>${arr.length?arr.map(v=>vehicleCard(v,false)).join(''):'<p class="muted">No hay vehículos disponibles ahora.</p>'}</div>`;
+    }
   }
   app.innerHTML=html;
 }
-function vehicleCard(v){
+function vehicleCard(v,selected=false){
   const hoy=reservasForDate(v.id,todayISODate());
   const reservadaParaOtro=hoy.length&&!hoy.some(r=>sameReservedPerson(r,USER));
   const reservaTxt=hoy.length?`<div class="notice"><b>Reservas hoy:</b><br>${hoy.map(r=>(r.horaRecogida?r.horaRecogida+' · ':'')+esc(r.personaNombre||'')).join('<br>')}</div>`:'';
-  return `<div class="vehicle">${v.fotoData?`<img class="photo" src="${v.fotoData}">`:''}<div class="big">${esc(vehName(v))}</div>${pillEstado(v.estado)}${reservaTxt}<label>Incidencia previa a la asignación, opcional</label><textarea id="nota_${v.id}" placeholder="Ej: faro roto antes de cogerlo"></textarea><button class="btn ${reservadaParaOtro?'bad':'blue'}" ${reservadaParaOtro?'disabled':''} onclick="recoger('${v.id}')">${reservadaParaOtro?'Reservado para otra persona':'Recoger este vehículo'}</button></div>`;
+  const recReady=!!protocolAccepted.recogida[v.id];
+  if(!recReady || !selected){
+    return `<div class="vehicle">${v.fotoData?`<img class="photo" src="${v.fotoData}">`:''}<div class="big">${esc(vehName(v))}</div>${pillEstado(v.estado)}${reservaTxt}<div class="notice">Al pulsar recoger se mostrará el protocolo de revisión de este vehículo.</div><button class="btn ${reservadaParaOtro?'bad':'blue'}" ${reservadaParaOtro?'disabled':''} onclick="recoger('${v.id}')">${reservadaParaOtro?'Reservado para otra persona':'Recoger este vehículo'}</button></div>`;
+  }
+  return `<div class="vehicle">${v.fotoData?`<img class="photo" src="${v.fotoData}">`:''}<div class="big">${esc(vehName(v))}</div>${pillEstado(v.estado)}${reservaTxt}<div class="field-alert pick"><div class="ico">⚠️</div><div><b>Revise antes de confirmar</b><span>Si observa un golpe, avería, rotura, luz fundida o anomalía previa, anótelo en la casilla inferior antes de pulsar Confirmar recogida. Si no observa nada, puede dejarla vacía.</span></div></div>${openIncidentsBox(v.id,'recogida')}<label>Escriba aquí la incidencia previa, si existe</label><textarea id="nota_${v.id}" placeholder="Ej: golpe lateral, luz fundida, rueda baja... Si no observa nada, puede dejarlo vacío."></textarea><button class="btn protocol-ready" onclick="recoger('${v.id}')">Confirmar recogida</button><button class="btn secondary" type="button" onclick="cancelPickupSelection()">Elegir otro vehículo</button></div>`;
 }
 window.recoger=async(vid)=>{
   if(actionBusy)return;
@@ -184,9 +314,11 @@ window.recoger=async(vid)=>{
   if(reservasHoy.length&&!reservasHoy.some(r=>sameReservedPerson(r,USER))){
     alert('Este vehículo está reservado hoy para otra persona.');return;
   }
+  if(!protocolAccepted.recogida[vid]){
+    showProtocol('recogida',vid);
+    return;
+  }
   const nota=($('#nota_'+vid)?.value||'').trim();
-  const ok=confirm('Vas a recoger el vehículo:\n\n'+vehName(v)+'\n\nUsuario: '+USER.nombre+'\n\n¿Confirmar recogida?');
-  if(!ok)return;
   setActionBusy(true,'Guardando recogida...');
   try{
     const movId=id('mov');
@@ -205,7 +337,7 @@ window.recoger=async(vid)=>{
       }
       tx.set(movRef,{id:movId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),matricula:actual.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'recogida',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:actual.estado,estadoVehiculoDespues:'en_servicio'});
       if(incRef){
-        tx.set(incRef,{id:incId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),usuarioId:USER.id,usuarioNombre:USER.nombre,texto:nota,estado:'abierta',origen:'previa_asignacion',fecha,revisadaPorAdmin:false});
+        tx.set(incRef,{id:incId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),usuarioId:USER.id,usuarioNombre:USER.nombre,texto:nota,estado:'abierta',origen:'previa_asignacion',fecha,revisadaPorAdmin:false,...responsabilidadIncidencia(actual,USER,'previa_asignacion',fecha)});
       }
       tx.update(vehRef,{estado:'en_servicio',usuarioActualId:USER.id,usuarioActualNombre:USER.nombre,fechaRecogidaActual:fecha,updatedAt:fecha});
     });
@@ -215,6 +347,8 @@ window.recoger=async(vid)=>{
     if(data.estado!=='en_servicio'||data.usuarioActualId!==USER.id){
       throw new Error('La recogida no quedó confirmada en la base. Revisa conexión y vuelve a intentarlo.');
     }
+    delete protocolAccepted.recogida[vid];
+    selectedPickupVid='';
     toast('Vehículo recogido correctamente');
   }catch(e){
     console.error(e);
@@ -240,9 +374,11 @@ window.devolver=async(vid)=>{
     render();
     return;
   }
+  if(!protocolAccepted.devolucion[vid]){
+    showProtocol('devolucion',vid);
+    return;
+  }
   const nota=($('#dev_nota')?.value||'').trim();
-  const ok=confirm('Vas a devolver el vehículo:\n\n'+vehName(v)+'\n\nUsuario actual: '+USER.nombre+'\n\n¿Confirmar devolución?');
-  if(!ok)return;
   setActionBusy(true,'Guardando devolución...');
   try{
     const movId=id('mov');
@@ -263,7 +399,7 @@ window.devolver=async(vid)=>{
       }
       tx.set(movRef,{id:movId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),matricula:actual.matricula||'',usuarioId:USER.id,usuarioNombre:USER.nombre,usuarioTipo:USER.tipo||'habitual',tipo:'devolucion',origen:'terminal_movil',fecha,incidenciaTexto:nota,estadoVehiculoAntes:actual.estado,estadoVehiculoDespues:'disponible'});
       if(incRef){
-        tx.set(incRef,{id:incId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),usuarioId:USER.id,usuarioNombre:USER.nombre,texto:nota,estado:'abierta',origen:'devolucion',fecha,revisadaPorAdmin:false});
+        tx.set(incRef,{id:incId,vehiculoId:actual.id,vehiculoNombre:vehName(actual),usuarioId:USER.id,usuarioNombre:USER.nombre,texto:nota,estado:'abierta',origen:'devolucion',fecha,revisadaPorAdmin:false,...responsabilidadIncidencia(actual,USER,'devolucion',fecha)});
       }
       if(reservaRef){
         tx.update(reservaRef,{estado:'completada',fechaCompletada:fecha,updatedAt:fecha});
@@ -276,6 +412,7 @@ window.devolver=async(vid)=>{
     if(data.estado!=='disponible'||data.usuarioActualId){
       throw new Error('La devolución no quedó confirmada en la base. Revisa conexión y vuelve a intentarlo.');
     }
+    delete protocolAccepted.devolucion[vid];
     toast('Vehículo devuelto correctamente');
   }catch(e){
     console.error(e);
