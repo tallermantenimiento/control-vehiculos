@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control de Vehículos</title>
+<title>Control de Vehículos · IA</title>
 <style>
 :root{--bg:#0f172a;--panel:#1f2937;--panel2:#263244;--txt:#f8fafc;--mut:#cbd5e1;--line:#3b475a;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626;--blue:#2563eb;--violet:#7c3aed;--r:18px;--shadow:0 14px 35px rgba(0,0,0,.35)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Inter,sans-serif;background:linear-gradient(135deg,#0b1120,#111827 55%,#1e293b);color:var(--txt)}
@@ -261,6 +261,35 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #374151;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
 }
 
+
+
+/* IA DIRECCION VEHICULOS V1 · panel lateral aislado */
+:root{--ldh-veh-ai-w:348px}
+body{padding-right:calc(var(--ldh-veh-ai-w) + 18px)}
+.ldh-veh-ai-dock{
+  position:fixed;right:8px;top:8px;bottom:8px;width:var(--ldh-veh-ai-w);z-index:9000;
+  display:flex;flex-direction:column;overflow:hidden;color:#eef7ff;
+  background:radial-gradient(360px 220px at 50% -8%,rgba(14,165,233,.16),transparent 62%),linear-gradient(180deg,#061427 0%,#07182d 58%,#041226 100%);
+  border:2px solid rgba(14,165,233,.82);border-radius:20px;
+  box-shadow:0 18px 50px rgba(0,0,0,.42),0 0 0 4px rgba(14,165,233,.05),inset 0 1px 0 rgba(255,255,255,.045);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.ldh-veh-ai-dock *{box-sizing:border-box}
+.ldh-veh-ai-head{height:70px;min-height:70px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:9px;background:#031321;border-bottom:1px solid rgba(56,189,248,.20)}
+.ldh-veh-ai-brand{display:flex;align-items:center;gap:9px;min-width:0}.ldh-veh-ai-bot{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:2px solid #22d3ee;background:#082747;font-size:21px;box-shadow:0 0 18px rgba(34,211,238,.16)}
+.ldh-veh-ai-title{min-width:0}.ldh-veh-ai-title b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ldh-veh-ai-title span{display:block;font-size:8.5px;color:#6ee7b7;margin-top:3px}.ldh-veh-ai-scope{font-size:9px;line-height:1.12;text-align:right;color:#7dd3fc;font-weight:900;letter-spacing:.03em;text-transform:uppercase}
+.ldh-veh-ai-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:10px;scrollbar-width:thin;scrollbar-color:#1e749a #061224}
+.ldh-veh-ai-welcome,.ldh-veh-ai-suggestions{border:1px solid rgba(56,189,248,.26);border-radius:14px;background:linear-gradient(180deg,rgba(10,34,60,.72),rgba(4,18,35,.82));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.ldh-veh-ai-welcome{padding:11px 12px;margin-bottom:9px}.ldh-veh-ai-welcome b{display:block;font-size:14px;margin-bottom:5px}.ldh-veh-ai-welcome p{margin:0;color:#b6cce3;font-size:11px;line-height:1.4}.ldh-veh-ai-boundary{margin-top:7px;padding:7px 8px;border-radius:9px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.24);color:#a7f3d0;font-size:9.5px;line-height:1.35}
+.ldh-veh-ai-suggestions{padding:10px;margin-bottom:10px}.ldh-veh-ai-suggestions h4{margin:0 0 8px;font-size:12px;color:#f6fbff}.ldh-veh-ai-quick{display:grid;gap:7px}.ldh-veh-ai-quick button{min-height:36px;display:grid;grid-template-columns:24px 1fr 14px;align-items:center;gap:7px;width:100%;border:1px solid rgba(56,189,248,.28);border-radius:9px;padding:6px 8px;background:linear-gradient(180deg,rgba(8,31,56,.84),rgba(5,22,42,.90));color:#eaf6ff;text-align:left;font-weight:800;font-size:10.5px;cursor:pointer}.ldh-veh-ai-quick button:hover{border-color:#20c9f4;background:rgba(14,165,233,.14)}.ldh-veh-ai-quick .qico{font-size:14px;text-align:center}.ldh-veh-ai-quick .arr{color:#3bdcff;font-size:16px;text-align:right}
+.ldh-veh-ai-chat{display:flex;flex-direction:column;gap:8px;padding:1px 0 8px}.ldh-veh-ai-msg-row{display:flex;gap:8px;align-items:flex-end}.ldh-veh-ai-msg-row.user{justify-content:flex-end}.ldh-veh-ai-mini-avatar{width:23px;height:23px;flex:0 0 23px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(56,189,248,.45);background:#082747;font-size:11px}.ldh-veh-ai-msg-wrap{max-width:87%}.ldh-veh-ai-meta{font-size:8.5px;color:#8fa7bf;margin:0 0 3px 2px}.ldh-veh-ai-msg-row.user .ldh-veh-ai-meta{text-align:right;margin-right:2px}.ldh-veh-ai-bubble{padding:8px 9px;border-radius:11px;background:#0b2b50;border:1px solid rgba(56,189,248,.12);font-size:10.5px;line-height:1.42;color:#dfeeff;white-space:pre-wrap;overflow-wrap:anywhere}.ldh-veh-ai-msg-row.user .ldh-veh-ai-bubble{background:linear-gradient(135deg,#0c4fc8,#0a3b97);border-color:rgba(96,165,250,.30);color:#fff}.ldh-veh-ai-bubble.error{background:#3a190f;border-color:rgba(248,113,113,.50);color:#fecaca}.ldh-veh-ai-bubble.system{background:#102237;border-color:rgba(96,165,250,.24);color:#c8d9ed}
+.ldh-veh-ai-action{margin:5px 0 2px 31px;padding:9px;border:1px solid rgba(250,204,21,.38);border-radius:11px;background:#28230b;color:#fff7c2}.ldh-veh-ai-action b{display:block;font-size:10.5px;margin-bottom:6px}.ldh-veh-ai-action p{font-size:10px;line-height:1.35;margin:0 0 7px}.ldh-veh-ai-action-buttons{display:flex;gap:7px}.ldh-veh-ai-action-buttons button{border-radius:8px;border:1px solid rgba(255,255,255,.16);padding:6px 9px;font-size:10px;font-weight:800;cursor:pointer}.ldh-veh-ai-confirm{background:#10b981;color:#062b20}.ldh-veh-ai-cancel{background:#16283e;color:#d9e9f6}
+.ldh-veh-ai-composer{flex:0 0 auto;padding:9px;border-top:1px solid rgba(56,189,248,.20);background:linear-gradient(180deg,rgba(4,18,34,.92),#041124)}.ldh-veh-ai-inputbar{display:grid;grid-template-columns:1fr 38px;align-items:end;border:1px solid rgba(56,189,248,.32);border-radius:11px;background:#071a31;overflow:hidden}#ldhVehAiInput{border:0;outline:0;resize:none;min-height:40px;max-height:92px;padding:10px 9px;background:transparent;color:#eff8ff;font:11px/1.4 Inter,system-ui,sans-serif}#ldhVehAiInput::placeholder{color:#7f9ab4}.ldh-veh-ai-send{width:32px;height:32px;margin:3px;border:0;border-radius:8px;background:linear-gradient(135deg,#16d8ff,#0d9fea);color:#032037;font-size:16px;font-weight:950;cursor:pointer;box-shadow:0 0 12px rgba(14,165,233,.26)}.ldh-veh-ai-send:disabled,.ldh-veh-ai-quick button:disabled{opacity:.45;cursor:not-allowed}.ldh-veh-ai-status{text-align:center;color:#6f8ca6;font-size:8px;margin-top:5px;letter-spacing:.02em}.ldh-veh-ai-status.ok{color:#6ee7b7}.ldh-veh-ai-status.bad{color:#fca5a5}.ldh-veh-ai-status.busy{color:#fde68a}
+.ldh-veh-ai-walkie-row{display:flex;align-items:center;gap:7px;margin-top:7px}.ldh-veh-ai-walkie{border:0;border-radius:9px;padding:8px 10px;font-weight:900;cursor:pointer;color:#fff;background:#0369a1;touch-action:none;user-select:none;-webkit-user-select:none;font-size:10px;line-height:1;white-space:nowrap}.ldh-veh-ai-walkie.recording{background:#b91c1c;animation:ldhVehAiWalkiePulse 1s infinite}.ldh-veh-ai-walkie-note{color:#7893ad;font-size:8.2px;line-height:1.2;min-width:0}.ldh-veh-ai-walkie:disabled{opacity:.45;cursor:not-allowed}.ldh-veh-ai-clear-row{display:flex;justify-content:flex-end;margin-top:7px}.ldh-veh-ai-clear{border:1px solid rgba(148,163,184,.28);border-radius:8px;padding:6px 9px;background:#102237;color:#c8d9ed;font-size:9px;font-weight:850;cursor:pointer}.ldh-veh-ai-clear:hover{border-color:#38bdf8;color:#fff}.ldh-veh-ai-clear:disabled{opacity:.45;cursor:not-allowed}@keyframes ldhVehAiWalkiePulse{50%{opacity:.6}}
+@media(max-width:1280px){:root{--ldh-veh-ai-w:320px}body{padding-right:338px}.ldh-veh-ai-dock{width:320px}}
+@media(max-width:1050px){body{padding-right:0}.ldh-veh-ai-dock{display:none}}
+@media print{body{padding-right:0!important}.ldh-veh-ai-dock{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -286,6 +315,43 @@ table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #374151;
   <section id="view-ajustes" class="view hidden grid"></section>
 </div>
 <div id="modal" class="modal hidden"></div><div id="toast" class="toast hidden"></div>
+<aside class="ldh-veh-ai-dock" id="ldhVehAiDock" aria-label="Asistente IA de Gestión de vehículos">
+  <div class="ldh-veh-ai-head">
+    <div class="ldh-veh-ai-brand"><div class="ldh-veh-ai-bot">🤖</div><div class="ldh-veh-ai-title"><b>Asistente IA</b><span>● En línea</span></div></div>
+    <div class="ldh-veh-ai-scope">SOLO<br>VEHÍCULOS</div>
+  </div>
+  <div class="ldh-veh-ai-scroll" id="ldhVehAiScroll">
+    <div class="ldh-veh-ai-welcome">
+      <b>Asistente IA · Gestión de vehículos</b>
+      <p>Consulta y gestiona vehículos, usuarios, reservas, incidencias y movimientos usando la misma IA central.</p>
+      <div class="ldh-veh-ai-boundary">Ámbito aislado: esta conversación solo recibe datos de Gestión de vehículos. No recibe Agenda, Stock, Preparación, Fabricación, Compras ni otros módulos de Gestión Taller.</div>
+    </div>
+    <div class="ldh-veh-ai-suggestions">
+      <h4>¿En qué puedo ayudarte?</h4>
+      <div class="ldh-veh-ai-quick">
+        <button type="button" data-veh-ai-prompt="Resume el estado actual de la flota y dime qué requiere atención primero"><span class="qico">🚐</span><span>Resumen de flota</span><span class="arr">›</span></button>
+        <button type="button" data-veh-ai-prompt="Revisa las incidencias abiertas y dime cuáles requieren atención"><span class="qico">⚠</span><span>Incidencias abiertas</span><span class="arr">›</span></button>
+        <button type="button" data-veh-ai-prompt="Resume las próximas reservas de vehículos"><span class="qico">📅</span><span>Próximas reservas</span><span class="arr">›</span></button>
+        <button type="button" data-veh-ai-prompt="Revisa las ITV próximas o vencidas de los vehículos"><span class="qico">✓</span><span>Revisar ITV</span><span class="arr">›</span></button>
+      </div>
+    </div>
+    <div class="ldh-veh-ai-chat" id="ldhVehAiMessages">
+      <div class="ldh-veh-ai-msg-row"><div class="ldh-veh-ai-mini-avatar">✦</div><div class="ldh-veh-ai-msg-wrap"><div class="ldh-veh-ai-meta">Asistente IA</div><div class="ldh-veh-ai-bubble">Conectando con la IA central…</div></div></div>
+    </div>
+  </div>
+  <div class="ldh-veh-ai-composer">
+    <div class="ldh-veh-ai-inputbar">
+      <textarea id="ldhVehAiInput" rows="1" placeholder="Escribe sobre vehículos, reservas, incidencias o usuarios..."></textarea>
+      <button class="ldh-veh-ai-send" id="ldhVehAiSend" type="button" title="Enviar a la IA">➤</button>
+    </div>
+    <div class="ldh-veh-ai-walkie-row">
+      <button class="ldh-veh-ai-walkie" id="ldhVehAiMic" type="button" title="Mantén pulsado para hablar y suelta para enviar">🎙 Mantén pulsado</button>
+      <span class="ldh-veh-ai-walkie-note" id="ldhVehAiMicNote">Whisper Large V3 · español ES · mantén pulsado para hablar</span>
+    </div>
+    <div class="ldh-veh-ai-clear-row"><button class="ldh-veh-ai-clear" id="ldhVehAiClear" type="button" title="Borra solo esta conversación de IA">🗑 Limpiar diálogo</button></div>
+    <div class="ldh-veh-ai-status" id="ldhVehAiStatus">IA central · comprobando conexión…</div>
+  </div>
+</aside>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -739,5 +805,142 @@ window.resetDB=()=>{if(confirm('¿Seguro que quieres borrar todos los datos de F
 render();
 loadFromFirestore();
 </script>
+<script id="LDH_VEHICULOS_DIRECCION_AI_V1">
+(function(){
+  'use strict';
+  if(window.__LDH_VEHICULOS_DIRECCION_AI_V1__)return;
+  window.__LDH_VEHICULOS_DIRECCION_AI_V1__=true;
+
+  const SCOPE='direccion_vehiculos';
+  const BRIDGE='https://gestion-taller-ia.taller-mantenimiento.workers.dev';
+  const EXPECTED_MODEL='openai/gpt-oss-120b';
+  const CHAT_KEY='ldh_ia_chat_direccion_vehiculos_v1';
+  const input=document.getElementById('ldhVehAiInput');
+  const messages=document.getElementById('ldhVehAiMessages');
+  const scroll=document.getElementById('ldhVehAiScroll');
+  const sendBtn=document.getElementById('ldhVehAiSend');
+  const status=document.getElementById('ldhVehAiStatus');
+  const mic=document.getElementById('ldhVehAiMic');
+  const micNote=document.getElementById('ldhVehAiMicNote');
+  const clearBtn=document.getElementById('ldhVehAiClear');
+  if(!input||!messages||!sendBtn)return;
+
+  const state={busy:false,health:null,history:[],pendingAction:null,cooldownUntil:0,recorder:null,stream:null,chunks:[],micHold:false,micReleaseRequested:false};
+  const t=v=>String(v==null?'':v);
+  const n=v=>t(v).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9._-]+/g,' ').replace(/\s+/g,' ').trim();
+  const e=s=>t(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clamp=(s,len)=>t(s).slice(0,len);
+
+  function setStatus(label,kind=''){if(!status)return;status.textContent=label;status.className='ldh-veh-ai-status'+(kind?' '+kind:'');}
+  function setBusy(on,label){state.busy=!!on;sendBtn.disabled=state.busy;document.querySelectorAll('[data-veh-ai-prompt]').forEach(b=>b.disabled=state.busy);if(mic&&!state.micHold)mic.disabled=state.busy;if(clearBtn)clearBtn.disabled=state.busy;if(label)setStatus(label,state.busy?'busy':'');}
+  function cleanAssistantText(v){return t(v).replace(/\*\*/g,'').replace(/^#{1,6}\s*/gm,'').trim();}
+  function addMessage(role,content){const row=document.createElement('div');row.className='ldh-veh-ai-msg-row'+(role==='user'?' user':'');const meta=role==='user'?'Tú':(role==='error'?'Sistema':'Asistente IA');const klass=role==='error'?' error':(role==='system'?' system':'');const shown=role==='assistant'?cleanAssistantText(content):t(content);row.innerHTML=(role==='user'?'':'<div class="ldh-veh-ai-mini-avatar">✦</div>')+'<div class="ldh-veh-ai-msg-wrap"><div class="ldh-veh-ai-meta">'+meta+'</div><div class="ldh-veh-ai-bubble'+klass+'">'+e(shown)+'</div></div>';messages.appendChild(row);if(scroll)scroll.scrollTop=scroll.scrollHeight;}
+  function resetMessages(message){messages.innerHTML='';if(message)addMessage('assistant',message);}
+  function loadHistory(){try{const a=JSON.parse(localStorage.getItem(CHAT_KEY)||'[]');if(Array.isArray(a))state.history=a.filter(x=>x&&['user','assistant'].includes(x.role)&&typeof x.content==='string').slice(-8);}catch(_){state.history=[];}}
+  function replayHistory(){state.history.forEach(x=>addMessage(x.role,x.content));}
+  function saveHistory(){try{localStorage.setItem(CHAT_KEY,JSON.stringify(state.history.slice(-8)));}catch(_){}}
+  function clearConversation(){if(state.busy)return;if(!confirm('¿Limpiar esta conversación de IA? No se borrará ningún vehículo, reserva, incidencia ni movimiento.'))return;state.history=[];state.pendingAction=null;state.cooldownUntil=0;input.value='';try{localStorage.removeItem(CHAT_KEY);}catch(_){}document.getElementById('ldhVehAiPendingAction')?.remove();resetMessages('Conversación limpiada. La IA de Vehículos sigue disponible y no se ha modificado ningún dato.');const model=t(state.health?.model||EXPECTED_MODEL).replace('openai/','');if(state.health?.hasKey)setStatus('IA central · '+model+' · solo Vehículos · en línea','ok');}
+  async function bridge(path,body,method='POST'){const opt={method,headers:{'Content-Type':'application/json'}};if(method!=='GET')opt.body=JSON.stringify(body||{});const c=new AbortController();const tm=setTimeout(()=>c.abort(),65000);opt.signal=c.signal;try{const res=await fetch(BRIDGE+path,opt);const raw=await res.text();let obj={};try{obj=JSON.parse(raw)}catch(_){obj={error:raw||('HTTP '+res.status)}}if(!res.ok){const err=new Error(obj?.providerMessage||obj?.error||('HTTP '+res.status));err.status=res.status;err.details=obj;throw err;}return obj;}finally{clearTimeout(tm);}}
+
+  function isoDateOnly(v){if(!v)return '';const d=new Date(v);if(!Number.isNaN(d.getTime()))return d.toISOString().slice(0,10);return t(v).slice(0,10);}
+  function vehicleSnapshot(userText){
+    const q=n(userText);const tokens=q.split(' ').filter(x=>x.length>2);
+    const vehicles=(DB.vehiculos||[]).map(v=>({id:v.id,nombre:vehName(v),modelo:t(v.modelo),matricula:t(v.matricula),estado:t(v.estado),activo:v.activo!==false,itvFecha:t(v.itvFecha),itvEstado:itvInfo(v).estado,itvTexto:itvInfo(v).txt,usuarioActualId:t(v.usuarioActualId),usuarioActualNombre:t(v.usuarioActualNombre||userName(v.usuarioActualId)),fechaRecogidaActual:t(v.fechaRecogidaActual),desperfectos:(v.desperfectosConocidos||[]).map(x=>clamp(x,180)),observaciones:clamp(v.observaciones,220)}));
+    const score=x=>{const hay=n(JSON.stringify(x));return tokens.reduce((s,z)=>s+(hay.includes(z)?1:0),0);};
+    vehicles.sort((a,b)=>score(b)-score(a)||t(a.matricula).localeCompare(t(b.matricula)));
+    const users=(DB.usuarios||[]).map(u=>({id:u.id,nombre:t(u.nombre),tipo:t(u.tipo||'habitual'),activo:u.activo!==false,accesoApp:!!u.accesoApp,telefono:t(u.telefono),observaciones:clamp(u.observaciones,160)}));
+    const reservas=[...(DB.reservas||[])].filter(r=>r.estado!=='cancelada').sort((a,b)=>(t(a.fecha)+t(a.horaRecogida)).localeCompare(t(b.fecha)+t(b.horaRecogida))).map(r=>({id:r.id,vehiculoId:t(r.vehiculoId),vehiculoNombre:t(r.vehiculoNombre),matricula:t(r.matricula),fecha:t(r.fecha),hora:t(r.horaRecogida),personaId:t(r.personaId),personaNombre:t(r.personaNombre),nota:clamp(r.nota,200),estado:t(r.estado||'reservada')}));
+    const incidencias=[...(DB.incidencias||[])].sort((a,b)=>t(b.fecha).localeCompare(t(a.fecha))).map(i=>({id:i.id,vehiculoId:t(i.vehiculoId),vehiculoNombre:t(i.vehiculoNombre),usuarioId:t(i.usuarioId),usuarioNombre:t(i.usuarioNombre),texto:clamp(i.texto,260),estado:t(i.estado||'abierta'),origen:t(i.origen),fecha:t(i.fecha),responsableInternoNombre:t(i.responsableInternoNombre)}));
+    const movimientos=[...(DB.movimientos||[])].sort((a,b)=>t(b.fecha).localeCompare(t(a.fecha))).slice(0,60).map(m=>({id:m.id,tipo:t(m.tipo),fecha:t(m.fecha),vehiculoId:t(m.vehiculoId),vehiculoNombre:t(m.vehiculoNombre),usuarioId:t(m.usuarioId),usuarioNombre:t(m.usuarioNombre),origen:t(m.origen),comentario:clamp(m.comentarioTexto,180),incidencia:clamp(m.incidenciaTexto,180)}));
+    const resumen={totalVehiculos:vehicles.length,disponibles:vehicles.filter(v=>v.activo&&v.estado==='disponible').length,enServicio:vehicles.filter(v=>v.estado==='en_servicio').length,enReparacion:vehicles.filter(v=>v.estado==='reparacion').length,noDisponibles:vehicles.filter(v=>v.estado==='no_disponible').length,baja:vehicles.filter(v=>v.estado==='baja').length,usuariosActivos:users.filter(u=>u.activo).length,reservasActivas:reservas.length,incidenciasAbiertas:incidencias.filter(i=>i.estado!=='cerrada').length,itvVencidas:vehicles.filter(v=>v.itvEstado==='vencida').length,itvProximas:vehicles.filter(v=>v.itvEstado==='proxima').length};
+    return {scope:SCOPE,programa:'Gestión de vehículos',timestamp:new Date().toISOString(),vistaActual:typeof view==='string'?view:'panel',config:{empresa:t(DB.config?.empresa)},resumen,vehiculos:vehicles.slice(0,50),usuarios:users.slice(0,50),reservas:reservas.slice(0,70),incidenciasAbiertas:incidencias.filter(i=>i.estado!=='cerrada').slice(0,50),incidenciasCerradasRecientes:incidencias.filter(i=>i.estado==='cerrada').slice(0,20),movimientosRecientes:movimientos,reglasEstado:{disponible:'Disponible',en_servicio:'En servicio',reparacion:'En reparación',no_disponible:'No disponible',baja:'Baja'},limites:'Estos son los UNICOS datos de negocio enviados a esta conversación. No hay datos de Gestión Taller, Agenda, Stock, Preparación, Fabricación, Compras, Pintura, Almacén ni Enlace OT.'};
+  }
+  function systemPrompt(userText){const data=vehicleSnapshot(userText);return [
+    'SCOPE OBLIGATORIO: direccion_vehiculos.',
+    'Eres el Asistente IA exclusivo del programa independiente Gestión de vehículos.',
+    'Responde siempre en español de España, de forma breve, precisa y práctica.',
+    'AISLAMIENTO ESTRICTO: solo puedes usar VEHICULOS_DATA. No tienes acceso a Gestión Taller, Agenda, Stock, Preparación, Fabricación, Pintura, Almacén, Compras, Enlace OT ni conversaciones de otros programas.',
+    'Si el usuario pregunta por otro ámbito, responde que esta IA de Vehículos no tiene acceso a esos datos. No infieras ni inventes información externa.',
+    'El historial que recibes pertenece exclusivamente a Gestión de vehículos.',
+    'Para vehículos, usuarios, reservas, incidencias, ITV y movimientos usa solo VEHICULOS_DATA. Si un dato no está, dilo.',
+    'No muestres IDs técnicos en respuestas normales salvo que sea imprescindible. Identifica vehículos por nombre/matrícula y personas por nombre.',
+    'No uses tablas Markdown ni bloques de código; responde con texto corto y listas simples cuando ayude.',
+    'Puedes proponer acciones únicamente sobre Gestión de vehículos. Toda acción se valida y exige confirmación en el panel antes de ejecutarse.',
+    'ACCIONES PERMITIDAS: CREATE_RESERVATION, CREATE_INCIDENT, CLOSE_INCIDENT, SET_VEHICLE_STATUS, ASSIGN_VEHICLE, RETURN_VEHICLE.',
+    'Si el usuario pide una modificación y tienes todos los datos necesarios, responde SOLO una línea con el formato exacto LDH_ACTION:{"type":"...",...}. No añadas explicación.',
+    'CREATE_RESERVATION requiere vehicleId, fecha YYYY-MM-DD, hora HH:MM y personaNombre; personaId es opcional.',
+    'CREATE_INCIDENT requiere vehicleId y texto; userId es opcional.',
+    'CLOSE_INCIDENT requiere incidentId de una incidencia abierta.',
+    'SET_VEHICLE_STATUS requiere vehicleId y estado; estado solo puede ser disponible, reparacion, no_disponible o baja. Nunca uses esta acción para poner en_servicio.',
+    'ASSIGN_VEHICLE requiere vehicleId y userId; comentario es opcional.',
+    'RETURN_VEHICLE requiere vehicleId; comentario e incidencia son opcionales.',
+    'Usa siempre los IDs reales de VEHICULOS_DATA dentro de LDH_ACTION. Si hay ambigüedad o falta un dato, pregunta antes y NO emitas LDH_ACTION.',
+    'Nunca propongas borrar vehículos, usuarios, incidencias, movimientos, reservas ni resetear la base.',
+    '',
+    'VEHICULOS_DATA='+JSON.stringify(data)
+  ].join('\n');}
+  function compactHistory(){return state.history.slice(-6);}
+  function findVehicle(idv){return (DB.vehiculos||[]).find(x=>x.id===t(idv).trim());}
+  function findUser(idv){return (DB.usuarios||[]).find(x=>x.id===t(idv).trim());}
+  function findIncident(idv){return (DB.incidencias||[]).find(x=>x.id===t(idv).trim());}
+  function actionLabel(a){
+    const v=findVehicle(a.vehicleId),u=findUser(a.userId),inc=findIncident(a.incidentId);
+    if(a.type==='CREATE_RESERVATION')return 'Crear reserva · '+(v?vehName(v):t(a.vehicleId))+' · '+t(a.fecha)+' '+t(a.hora)+' · '+t(a.personaNombre||u?.nombre);
+    if(a.type==='CREATE_INCIDENT')return 'Crear incidencia · '+(v?vehName(v):t(a.vehicleId))+' · '+clamp(a.texto,120);
+    if(a.type==='CLOSE_INCIDENT')return 'Cerrar incidencia · '+clamp(inc?.texto||a.incidentId,120);
+    if(a.type==='SET_VEHICLE_STATUS')return 'Cambiar estado · '+(v?vehName(v):t(a.vehicleId))+' → '+({disponible:'Disponible',reparacion:'En reparación',no_disponible:'No disponible',baja:'Baja'}[a.estado]||t(a.estado));
+    if(a.type==='ASSIGN_VEHICLE')return 'Asignar vehículo · '+(v?vehName(v):t(a.vehicleId))+' → '+(u?.nombre||t(a.userId));
+    if(a.type==='RETURN_VEHICLE')return 'Registrar devolución · '+(v?vehName(v):t(a.vehicleId))+(a.incidencia?' · con incidencia':'');
+    return 'Acción de Gestión de vehículos';
+  }
+  function parseAction(reply){const m=t(reply).trim().match(/^LDH_ACTION\s*:\s*(\{[\s\S]*\})\s*$/);if(!m)return null;try{return JSON.parse(m[1]);}catch(_){return null;}}
+  function showAction(action){state.pendingAction=action;const box=document.createElement('div');box.className='ldh-veh-ai-action';box.id='ldhVehAiPendingAction';box.innerHTML='<b>Acción propuesta</b><p>'+e(actionLabel(action))+'</p><div class="ldh-veh-ai-action-buttons"><button class="ldh-veh-ai-confirm" type="button">Confirmar</button><button class="ldh-veh-ai-cancel" type="button">Cancelar</button></div>';messages.appendChild(box);if(scroll)scroll.scrollTop=scroll.scrollHeight;box.querySelector('.ldh-veh-ai-confirm').addEventListener('click',async()=>{box.remove();const a=state.pendingAction;state.pendingAction=null;await executeAction(a);});box.querySelector('.ldh-veh-ai-cancel').addEventListener('click',()=>{box.remove();state.pendingAction=null;addMessage('system','Acción cancelada. No se ha modificado ningún dato.');});}
+
+  async function executeAction(a){
+    try{
+      if(!a||typeof a!=='object')throw new Error('Acción no válida.');
+      if(a.type==='CREATE_RESERVATION'){
+        const v=findVehicle(a.vehicleId);if(!v)throw new Error('No encuentro ese vehículo.');if(v.activo===false||v.estado==='baja')throw new Error('Ese vehículo no está disponible para nuevas reservas.');
+        const fecha=t(a.fecha).trim(),hora=t(a.hora).trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha))throw new Error('Fecha de reserva no válida.');if(!/^\d{2}:\d{2}$/.test(hora))throw new Error('Hora de reserva no válida.');if(fecha<todayISODate())throw new Error('No se puede crear una reserva en una fecha pasada.');if(fecha===todayISODate()&&hora<currentHHMM())throw new Error('No se puede reservar una hora que ya ha pasado.');
+        let u=a.personaId?findUser(a.personaId):null;let personaNombre=t(a.personaNombre||u?.nombre).trim();if(!personaNombre)throw new Error('Falta la persona para la reserva.');
+        const dup=(DB.reservas||[]).find(r=>r.estado!=='cancelada'&&r.vehiculoId===v.id&&r.fecha===fecha&&t(r.horaRecogida)===hora);if(dup)throw new Error('Ese vehículo ya está reservado ese día y a esa hora.');
+        if(fecha===todayISODate()&&(v.estado==='en_servicio'||v.usuarioActualId)&&(!u||v.usuarioActualId!==u.id))throw new Error('Ese vehículo está actualmente en servicio con otra persona.');
+        DB.reservas.push({id:id('res'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',fecha,horaRecogida:hora,personaId:u?.id||'',personaNombre,nota:t(a.nota).trim(),estado:'reservada',createdAt:nowISO(),updatedAt:nowISO()});
+        save();
+      }else if(a.type==='CREATE_INCIDENT'){
+        const v=findVehicle(a.vehicleId),u=a.userId?findUser(a.userId):null,txt=t(a.texto).trim();if(!v)throw new Error('No encuentro ese vehículo.');if(!txt)throw new Error('Falta el texto de la incidencia.');addInc(v,u,txt,'base_pc');save();
+      }else if(a.type==='CLOSE_INCIDENT'){
+        const inc=findIncident(a.incidentId);if(!inc)throw new Error('No encuentro esa incidencia.');if(inc.estado==='cerrada')throw new Error('La incidencia ya está cerrada.');inc.estado='cerrada';inc.fechaCierre=nowISO();inc.revisadaPorAdmin=true;save();
+      }else if(a.type==='SET_VEHICLE_STATUS'){
+        const v=findVehicle(a.vehicleId),estado=t(a.estado).trim();if(!v)throw new Error('No encuentro ese vehículo.');if(!['disponible','reparacion','no_disponible','baja'].includes(estado))throw new Error('Estado no permitido.');if(v.estado==='en_servicio'||v.usuarioActualId)throw new Error('El vehículo está en servicio. Primero registra su devolución.');v.estado=estado;v.updatedAt=nowISO();save();
+      }else if(a.type==='ASSIGN_VEHICLE'){
+        const v=findVehicle(a.vehicleId),u=findUser(a.userId);if(!v||!u)throw new Error('No encuentro el vehículo o el usuario.');if(u.activo===false)throw new Error('Ese usuario está desactivado.');if(['reparacion','no_disponible','baja'].includes(v.estado))throw new Error('Ese vehículo no está disponible para asignación.');if(v.estado==='en_servicio'||v.usuarioActualId)throw new Error('Ese vehículo ya está en servicio.');const abierta=allServiceRows(v.id).find(r=>!r.fechaDevolucion);if(abierta)throw new Error('Ese vehículo tiene una recogida pendiente de devolución.');const reservasHoy=reservasForDate(v.id,todayISODate());if(reservasHoy.length&&!reservasHoy.some(r=>sameReservedPerson(r,u)))throw new Error('Ese vehículo está reservado hoy para otra persona.');const antes=v.estado;const fecha=nowISO();v.estado='en_servicio';v.usuarioActualId=u.id;v.usuarioActualNombre=u.nombre;v.fechaRecogidaActual=fecha;DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:u.id,usuarioNombre:u.nombre,usuarioTipo:u.tipo||'habitual',tipo:'recogida',origen:'ia_direccion_vehiculos',fecha,fechaRegistro:fecha,comentarioTexto:t(a.comentario).trim(),incidenciaTexto:'',estadoVehiculoAntes:antes,estadoVehiculoDespues:'en_servicio'});save();
+      }else if(a.type==='RETURN_VEHICLE'){
+        const v=findVehicle(a.vehicleId);if(!v)throw new Error('No encuentro ese vehículo.');if(v.estado!=='en_servicio'&&!v.usuarioActualId)throw new Error('Ese vehículo no tiene una recogida abierta.');const u=findUser(v.usuarioActualId)||{id:v.usuarioActualId||'',nombre:v.usuarioActualNombre||'',tipo:'habitual'};const antes=v.estado,fecha=nowISO(),incTxt=t(a.incidencia).trim();DB.movimientos.push({id:id('mov'),vehiculoId:v.id,vehiculoNombre:vehName(v),matricula:v.matricula||'',usuarioId:u.id||'',usuarioNombre:u.nombre||v.usuarioActualNombre||'',usuarioTipo:u.tipo||'habitual',tipo:'devolucion',origen:'ia_direccion_vehiculos',fecha,fechaRegistro:fecha,comentarioTexto:t(a.comentario).trim(),incidenciaTexto:incTxt,estadoVehiculoAntes:antes,estadoVehiculoDespues:'disponible'});completarReservaDevolucion(v,u);if(incTxt)addInc(v,u,incTxt,'devolucion');v.estado='disponible';v.usuarioActualId='';v.usuarioActualNombre='';v.fechaRecogidaActual='';save();
+      }else throw new Error('Acción no permitida.');
+      addMessage('assistant','Hecho. La acción se ha aplicado únicamente en Gestión de vehículos.');
+    }catch(err){addMessage('error','No se ha aplicado la acción: '+t(err?.message||err));}
+  }
+
+  async function send(valueRaw){const value=t(valueRaw).trim();if(!value||state.busy)return;input.value='';addMessage('user',value);if(Date.now()<state.cooldownUntil){const s=Math.max(1,Math.ceil((state.cooldownUntil-Date.now())/1000));addMessage('system','La IA está temporalmente limitada. Reintenta en '+s+' s.');return;}setBusy(true,'IA central · leyendo solo Vehículos…');try{const response=await bridge('/chat',{scope:SCOPE,messages:[{role:'system',content:systemPrompt(value)},...compactHistory(),{role:'user',content:value}],temperature:0.05,reasoning_effort:'medium',max_completion_tokens:560});const reply=t(response?.choices?.[0]?.message?.content).trim();if(!reply)throw new Error('La IA no devolvió una respuesta válida.');const action=parseAction(reply);if(action){showAction(action);state.history.push({role:'user',content:value},{role:'assistant',content:'Acción propuesta: '+actionLabel(action)});}else{addMessage('assistant',reply);state.history.push({role:'user',content:value},{role:'assistant',content:reply});}state.history=state.history.slice(-8);saveHistory();state.cooldownUntil=0;const model=t(response?.model||state.health?.model||EXPECTED_MODEL).replace('openai/','');setStatus('IA central · '+model+' · solo Vehículos · en línea','ok');}catch(err){const msg=t(err?.message||err||'Error desconocido');if(err?.status===429||/429|rate.?limit|too many|cuota|resource exhausted/i.test(msg)){state.cooldownUntil=Date.now()+4000;addMessage('error','Groq está temporalmente limitado. Reintenta en unos segundos.');setStatus('IA central · límite temporal','bad');}else if(err?.status===403&&location.hostname!=='tallermantenimiento.github.io'){addMessage('error','El Worker está operativo, pero este origen no está autorizado para consultas IA.');setStatus('IA central · origen no autorizado','bad');}else{addMessage('error','Error IA: '+msg);setStatus('IA central · sin conexión','bad');}}finally{setBusy(false);}}
+
+  async function blobToBase64(blob){return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=reject;r.readAsDataURL(blob);});}
+  function voiceNorm(v){return t(v).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9.]+/g,' ').replace(/\s+/g,' ').trim();}
+  function looksLikeWhisperHallucination(v){const q=voiceNorm(v);if(!q)return true;const exact=['suscribete','suscribanse','subscribe','music','musica','aplausos','subtitulos','amara','amara.org','gracias por ver el video'];if(exact.includes(q))return true;return [/^gracias por ver(?: este| el)? video/,/^thanks for watching/,/\bsuscrib(?:ete|irse|anse|e)\b/,/\bsubtitulos?\b/,/\bamara(?:\.org)?\b/,/^(?:www\.|https?:)/].some(re=>re.test(q));}
+  function voicePrompt(){const vocab=['Gestión de vehículos','Control de vehículos','vehículo','vehículos','furgón','furgoneta','camión','turismo','matrícula','disponible','en servicio','en reparación','no disponible','baja','usuario','reserva','reservar','recogida','devolución','incidencia','ITV','usuario habitual','usuario ocasional','matrícula','furgoneta','camión','turismo'];return ('IDIOMA OBLIGATORIO: español de España. Transcribe literalmente lo que se oye. No traduzcas ni inventes palabras. Vocabulario de Gestión de vehículos: '+vocab.join(', ')+'. Conserva matrículas, nombres, fechas, horas y cantidades exactamente como se oyen.').slice(0,900);}
+  function restoreOnlineStatus(){const model=t(state.health?.model||EXPECTED_MODEL).replace('openai/','');if(state.health?.hasKey)setStatus('IA central · '+model+' · solo Vehículos · en línea','ok');}
+  async function startWalkie(){if(state.busy||state.recorder?.state==='recording')return;state.micReleaseRequested=false;if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){addMessage('error','Este navegador no permite usar el micrófono aquí.');return;}try{const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});state.stream=stream;state.chunks=[];const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';const rec=new MediaRecorder(stream,{mimeType:mime});state.recorder=rec;const started=performance.now();rec.ondataavailable=ev=>{if(ev.data&&ev.data.size)state.chunks.push(ev.data);};rec.onstop=async()=>{mic?.classList.remove('recording');if(mic)mic.textContent='🎙 Mantén pulsado';try{stream.getTracks().forEach(x=>x.stop());}catch(_){}state.stream=null;state.recorder=null;const blob=new Blob(state.chunks,{type:mime});const heldMs=Math.max(0,performance.now()-started);if(!blob.size||heldMs<650){if(micNote)micNote.textContent='Pulsación demasiado corta. Mantén pulsado mientras hablas.';restoreOnlineStatus();return;}try{setBusy(true,'IA central · transcribiendo voz…');if(micNote)micNote.textContent='Whisper Large V3 · transcribiendo…';const b64=await blobToBase64(blob);const tr=await bridge('/transcribe',{scope:SCOPE,audioBase64:b64,mimeType:mime,prompt:voicePrompt(),temperature:0});const spoken=t(tr?.text).trim();setBusy(false);if(!spoken||looksLikeWhisperHallucination(spoken)||/^(https?:\/\/|www\.)/i.test(spoken)){input.value='';if(micNote)micNote.textContent='No he reconocido una frase fiable. Vuelve a intentarlo.';restoreOnlineStatus();return;}input.value=spoken;if(micNote)micNote.textContent='Entendido: «'+spoken+'» · enviando…';await send(spoken);if(micNote)micNote.textContent='Whisper Large V3 · español ES · mantén pulsado para hablar';}catch(err){setBusy(false);addMessage('error','Error de voz: '+t(err?.message||err));if(micNote)micNote.textContent='Error de voz. Revisa el micrófono y vuelve a intentarlo.';restoreOnlineStatus();}};rec.start();mic?.classList.add('recording');if(mic)mic.textContent='🎙 Suelta para enviar';if(micNote)micNote.textContent='Escuchando · suelta cuando termines';setStatus('Voz · escuchando…','busy');if(state.micReleaseRequested||!state.micHold)setTimeout(()=>{try{if(rec.state==='recording')rec.stop();}catch(_){}},0);}catch(err){try{state.stream?.getTracks?.().forEach(x=>x.stop());}catch(_){}state.stream=null;state.recorder=null;mic?.classList.remove('recording');if(mic)mic.textContent='🎙 Mantén pulsado';addMessage('error','No puedo capturar el micrófono: '+t(err?.message||err));if(micNote)micNote.textContent='Revisa el permiso del micrófono en Chrome.';restoreOnlineStatus();}}
+
+  async function health(){try{const h=await bridge('/health',null,'GET');state.health=h;const model=t(h?.model||EXPECTED_MODEL).replace('openai/','');if(h?.hasKey){resetMessages('IA de Vehículos conectada. Solo puedo ver y manejar los datos de este programa.');replayHistory();setStatus('IA central · '+model+' · solo Vehículos · en línea','ok');if(micNote)micNote.textContent='Whisper Large V3 · español ES · mantén pulsado para hablar';}else{resetMessages('El servidor IA responde, pero no tiene una clave Groq configurada.');replayHistory();setStatus('IA central · sin clave API','bad');}}catch(_){resetMessages('No he podido conectar con la IA central. Gestión de vehículos sigue funcionando normalmente.');setStatus('IA central · no disponible','bad');}}
+
+  document.querySelectorAll('[data-veh-ai-prompt]').forEach(b=>b.addEventListener('click',()=>send(b.getAttribute('data-veh-ai-prompt')||'')));
+  sendBtn.addEventListener('click',()=>send(input.value));
+  if(clearBtn)clearBtn.addEventListener('click',clearConversation);
+  input.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();send(input.value);}});
+  if(mic){const beginHold=ev=>{if(state.busy||state.micHold)return;ev?.preventDefault?.();state.micHold=true;state.micReleaseRequested=false;try{if(ev?.pointerId!=null)mic.setPointerCapture(ev.pointerId);}catch(_){}startWalkie();};const endHold=ev=>{if(!state.micHold&&!state.recorder)return;ev?.preventDefault?.();state.micHold=false;state.micReleaseRequested=true;try{if(state.recorder?.state==='recording')state.recorder.stop();}catch(_){} };mic.onclick=ev=>ev.preventDefault();mic.oncontextmenu=ev=>ev.preventDefault();mic.addEventListener('pointerdown',beginHold);mic.addEventListener('pointerup',endHold);mic.addEventListener('pointercancel',endHold);window.addEventListener('pointerup',endHold);window.addEventListener('blur',()=>{if(state.micHold||state.recorder?.state==='recording')endHold();});}
+  loadHistory();health();
+})();
+</script>
+
 </body>
 </html>
