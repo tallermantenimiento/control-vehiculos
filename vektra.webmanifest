@@ -1,0 +1,22 @@
+{
+  "id": "/control-vehiculos/",
+  "name": "VEKTRA · Vehicle Control System",
+  "short_name": "VEKTRA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101b22",
+  "theme_color": "#101b22",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "vektra-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}
