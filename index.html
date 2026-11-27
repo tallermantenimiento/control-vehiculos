@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control de Vehículos · IA</title>
+<title>VEKTRA · Vehicle Control System</title>
 <style>
 :root{--bg:#0f172a;--panel:#1f2937;--panel2:#263244;--txt:#f8fafc;--mut:#cbd5e1;--line:#3b475a;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626;--blue:#2563eb;--violet:#7c3aed;--r:18px;--shadow:0 14px 35px rgba(0,0,0,.35)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Inter,sans-serif;background:linear-gradient(135deg,#0b1120,#111827 55%,#1e293b);color:var(--txt)}
@@ -291,10 +291,19 @@ body{padding-right:calc(var(--ldh-veh-ai-w) + 18px)}
 @media print{body{padding-right:0!important}.ldh-veh-ai-dock{display:none!important}}
 
 </style>
+<style id="VEKTRA_BRAND_V1">
+header{background:#101b22;border-bottom:1px solid #16834a;flex-wrap:wrap;padding:0 14px 10px;gap:8px}
+.vektra-brand{width:min(100%,694px);flex:0 0 auto;min-width:0}
+.vektra-banner{position:relative;aspect-ratio:2112 / 403;overflow:hidden;background:#101b22;width:100%}
+.vektra-banner img{position:absolute;display:block;width:100%;height:auto;max-width:none;left:0;top:-36.2%}
+.vektra-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+header>.tabs{flex:1 1 auto;justify-content:flex-start}
+@media(max-width:900px){header{padding:0 10px 10px}.vektra-brand{width:min(100%,694px)}}
+</style>
 </head>
 <body>
 <header>
-  <div><h1>Control de Vehículos</h1><div class="sub">Versión web · Firestore · datos compartidos en tiempo real</div></div>
+  <div class="vektra-brand"><h1 class="vektra-sr-only">VEKTRA · Vehicle Control System</h1><div class="vektra-banner"><img src="Sistema%20de%20Control%20Vehicular%20VEKTRA.png?v=1" alt="VEKTRA · Vehicle Control System · by Roman"></div></div>
   <div class="tabs">
     <button class="tab active" data-view="panel">Panel de Control</button>
     <button class="tab" data-view="vehiculos">Vehículos</button>
